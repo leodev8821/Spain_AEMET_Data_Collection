@@ -20,8 +20,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Carga el progreso previo desde archivo si existe
 def load_progress(progress_file):
-    """Carga el progreso previo desde archivo si existe"""
     if os.path.exists(progress_file):
         try:
             with open(progress_file, 'r', encoding='utf-8') as f:
@@ -35,8 +35,8 @@ def load_progress(progress_file):
             logger.warning(f"Error al cargar progreso previo: {e}")
     return defaultdict(set), {}
 
+# Guarda el progreso actual
 def save_progress(progress_file, processed_dates, stations_data):
-    """Guarda el progreso actual"""
     try:
         progress_data = {
             'processed_dates': {k: list(v) for k, v in processed_dates.items()},
@@ -47,13 +47,13 @@ def save_progress(progress_file, processed_dates, stations_data):
     except Exception as e:
         logger.error(f"Error al guardar progreso: {e}")
 
+# Actualiza el timestamp de actualización para la fecha actual
 def update_timestamp(stations_data, station_code, date_key):
-    """Actualiza el timestamp de actualización para una fecha específica"""
     now = datetime.now(timezone.utc)
-    stations_data[station_code]['date'][date_key]['ts_update'] = now.isoformat()
+    stations_data[station_code]['date'][date_key]['ts_update'] = now
 
+# Obtiene la información histórica de las estaciones de meteorología de la AEMET - España
 def historical_data(final_date):
-    """Obtiene la información histórica de las estaciones de meteorología de la AEMET - España"""
     try:
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -111,6 +111,7 @@ def historical_data(final_date):
                         'ts_update': now.isoformat()
                     }
 
+            # Si no hay información nueva para la estación, sigue con la siguiente
             if not new_data:
                 logger.info(f"No hay datos nuevos para {station_name}")
                 continue

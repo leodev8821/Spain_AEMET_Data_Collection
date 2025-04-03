@@ -27,14 +27,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# Excepción personalizada para errores de rate limiting
 class RateLimitException(Exception):
-    """Excepción personalizada para errores de rate limiting"""
     def __init__(self, retry_after=60):
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds")
 
+# Determina si la respuesta indica un error de rate limiting para hacer reintentos
 def is_rate_limit_error(response):
-    """Determina si la respuesta indica un error de rate limiting"""
     try:
         if response.status_code == 429:
             return True
@@ -55,15 +55,21 @@ api_retry = retry(
     reraise=True
 )
 
+# Realiza peticiones HTTP con manejo de rate limiting
 def api_request(url, headers=None, timeout=10):
-    """Realiza peticiones HTTP con manejo de rate limiting"""
     try:
         response = requests.get(url, headers=headers, timeout=timeout)
+
+        # Si lanza un error de exceso de peticiones, setea el tiempo para reintento en 61 segundos
         if is_rate_limit_error(response):
             retry_after = 61
             raise RateLimitException(retry_after)
+        
+        # Lanza cualquier error de fetch
         response.raise_for_status()
+        # Retorna la respuesta en json si existe
         return response.json() if response.content else None
+    
     except RequestException as e:
         logger.error(f"Error en la petición HTTP: {str(e)}")
         return None
@@ -71,17 +77,17 @@ def api_request(url, headers=None, timeout=10):
         logger.error(f"Error inesperado: {str(e)}")
         return None
 
+# Función que obtiene los datos de cada estación y los alamacena en un JSON
 def fetch_station_data(
     encoded_init_date,
     encoded_end_date,
     station_code,
     last_request_time=None
 ):
-    '''Función que obtiene los datos de cada estación y los alamacena en un JSON'''
 
+    # Función interna para manejar los reintentos
     @api_retry
     def _fetch_with_retry(url, headers=None):
-        """Función interna para manejar los reintentos"""
         return api_request(url, headers=headers, timeout=15)
 
     try:
@@ -102,6 +108,7 @@ def fetch_station_data(
             logger.error("API key no configurada")
             return None
         
+        # Headers requeridos por la API
         headers = {
             'accept': 'application/json',
             'api_key': api_key,
@@ -115,6 +122,7 @@ def fetch_station_data(
             logger.error("No se pudo obtener la URL de datos")
             return None
         
+        # Si hay respuesta correcta, obtengo la url para el siguiente fetch
         if response.get('estado') == 200:
             data_url = response['datos']
             logger.debug(f"URL de datos obtenida: {data_url}")
@@ -125,7 +133,7 @@ def fetch_station_data(
                 logger.warning("No se recibieron datos válidos")
                 return None
             
-            # Procesar datos en el formato específico requerido
+            # Procesar datos en el formato específico
             station_info = {
                 "town_code": data[0].get('indicativo', 'no_data'),
                 "province": data[0].get('provincia', 'no_data'),
@@ -133,6 +141,7 @@ def fetch_station_data(
                 "date": {}
             }
             
+            # Recorre la fecha para insertar los datos
             for day_data in data:
                 date = day_data.get('fecha', 'no_data')
                 station_info["date"][date] = {

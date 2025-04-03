@@ -1,6 +1,4 @@
-from datetime import datetime
-import re
-from scripts import historical_data, obtain_stations_EMA_code, data_to_csv
+from scripts import historical_data, obtain_stations_EMA_code, data_to_csv, date_validation
 import logging
 
 # Configurar logging
@@ -10,19 +8,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def date_validation(date_str):
-    try:
-        # Verificar formato básico con regex
-        if not re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
-            return False, "Formato inválido. Debe ser YYYY-MM-DD"
-        
-        # Validar que sea una fecha válida
-        datetime.strptime(date_str, "%Y-%m-%d")
-        return True, ""
-    
-    except ValueError:
-        return False, "Fecha inválida. Por favor, ingrese una fecha correcta."
 
+
+# Main de la aplicación
 def main():
    
    while True:
@@ -44,6 +32,7 @@ def main():
             logger.info("¡Códigos de estaciones EMA obtenidos!")
                     
         case "2":
+            # Obtener toda la información solicitada de las estaciones en el rango de fecha
             fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
             is_valid, message = date_validation(fecha)
             
@@ -52,14 +41,17 @@ def main():
             logger.error(message)
                     
         case "3":
+            # Crea un archivo con los datos de las temperatura en /csv/temperature.csv
             logger.info("Creando temperature.csv...")
             data_to_csv('temperature')
                     
         case "4":
+            # Crea un archivo con los datos de las precipitaciones en /csv/precipitation.csv
             logger.info("Creando precipitation.csv...")
             data_to_csv('precipitation')
         
         case "5":
+            # Crea un archivo con los datos de las racha media en /csv/hrMedia.csv
             logger.info("Creando hrMedia.csv...")
             data_to_csv('hrMedia')
 

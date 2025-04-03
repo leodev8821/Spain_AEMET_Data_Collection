@@ -6,10 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def obtain_stations_EMA_code():
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Current script's directory (scripts)
-    api_dir = os.path.dirname(script_dir)  # Go up one level to api
-    # json_dir = os.path.join(api_dir, 'json') #go down into json
-    # script_dir = os.path.dirname(__file__)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    api_dir = os.path.dirname(script_dir)
     api_key = os.getenv("AEMET_API_KEY")
     all_stations_url = "https://opendata.aemet.es/opendata/api/valores/climatologicos/inventarioestaciones/todasestaciones"
     
@@ -25,8 +23,10 @@ def obtain_stations_EMA_code():
         data_url = response['datos']
         data = requests.get(data_url).json()
 
+        # Creo el diccionario con la estructura deseada
         station_dict = {station['nombre']: station['indicativo'] for station in data}
 
+        # Almacena la información en /json/ema_codes.json
         with open(ema_codes_route, 'w', encoding='utf-8') as f:
             json.dump(station_dict, f, ensure_ascii=False, indent=4)
 
