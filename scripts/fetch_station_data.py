@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Dict, Optional
 import requests
 from requests.exceptions import (
     ConnectionError,
@@ -30,14 +29,14 @@ load_dotenv()
 
 class RateLimitException(Exception):
     """Excepción personalizada para errores de rate limiting"""
-    def __init__(self, retry_after: int = 60):
+    def __init__(self, retry_after=60):
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds")
 
-def is_rate_limit_error(response: requests.Response) -> bool:
+def is_rate_limit_error(response):
     """Determina si la respuesta indica un error de rate limiting"""
     try:
-        if response.status_code  == 429:
+        if response.status_code == 429:
             return True
         json_data = response.json()
         return json_data.get('estado') == 429
@@ -56,7 +55,7 @@ api_retry = retry(
     reraise=True
 )
 
-def api_request(url: str, headers: dict = None, timeout: int = 10) -> Optional[dict]:
+def api_request(url, headers=None, timeout=10):
     """Realiza peticiones HTTP con manejo de rate limiting"""
     try:
         response = requests.get(url, headers=headers, timeout=timeout)
@@ -72,17 +71,16 @@ def api_request(url: str, headers: dict = None, timeout: int = 10) -> Optional[d
         logger.error(f"Error inesperado: {str(e)}")
         return None
 
-    
 def fetch_station_data(
-    encoded_init_date: str,
-    encoded_end_date: str,
-    station_code: str,
-    last_request_time: Optional[datetime] = None
-) -> Optional[Dict]:
+    encoded_init_date,
+    encoded_end_date,
+    station_code,
+    last_request_time=None
+):
     '''Función que obtiene los datos de cada estación y los alamacena en un JSON'''
 
     @api_retry
-    def _fetch_with_retry(url: str, headers: dict = None) -> Optional[dict]:
+    def _fetch_with_retry(url, headers=None):
         """Función interna para manejar los reintentos"""
         return api_request(url, headers=headers, timeout=15)
 

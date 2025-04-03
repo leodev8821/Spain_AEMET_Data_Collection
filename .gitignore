@@ -10,6 +10,7 @@ __pycache__/
 # Archivos JSON generados por la app
 ema_codes.json
 progress.json
+weather_data.json
 
 # Archivos txt
 *clean.txt

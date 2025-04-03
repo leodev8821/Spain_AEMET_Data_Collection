@@ -24,7 +24,7 @@ def temp_to_csv():
             print(f"Procesando {town} ({code})...")
             
             for date, values in station_info[code]['date'].items():
-                temp_str = values['temperature']
+                temp_str = values['values']['temperature']
                 
                 # Verificar si el valor de temperature es un número
                 if temp_str == 'no_data':

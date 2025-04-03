@@ -52,7 +52,7 @@ def update_timestamp(stations_data, station_code, date_key):
     now = datetime.now(timezone.utc)
     stations_data[station_code]['date'][date_key]['ts_update'] = now.isoformat()
 
-def historical_data():
+def historical_data(final_date):
     """Obtiene la información histórica de las estaciones de meteorología de la AEMET - España"""
     try:
         # 1. Configuración inicial
@@ -61,11 +61,8 @@ def historical_data():
         progress_file = os.path.join(api_dir, 'json', 'progress.json')
         output_file = os.path.join(api_dir, 'json', 'weather_data.json')
 
-        # 2. Obtener códigos de estaciones
+        # 2. Leer los códigos de las estaciones desde JSON
         logger.info("Obteniendo códigos de estaciones EMA")
-        obtain_stations_EMA_code()
-
-        # Leer los códigos de las estaciones desde JSON
         json_path = os.path.join(api_dir, 'json', 'ema_codes.json')
         with open(json_path, 'r', encoding='utf-8') as archive:
             ema_codes = json.load(archive)
@@ -75,8 +72,7 @@ def historical_data():
 
         # 4. Configurar rango de fechas
         encoded_init_date = DEFAULT_START_DATE.replace(':', '%3A')
-        now = datetime.now(timezone.utc)
-        end_date_str = now.strftime('%Y-%m-%dT%H:%M:%S') + 'UTC'
+        end_date_str = final_date + 'T00:00:00UTC'
         encoded_end_date = end_date_str.replace(':', '%3A')
 
         # 5. Procesar estaciones
@@ -105,6 +101,7 @@ def historical_data():
                 processed_dates[station_code] = set()
 
             # Filtrar solo las fechas que no hemos procesado
+            now = datetime.now(timezone.utc)
             new_data = {}
             for date, values in result['date'].items():
                 if date not in existing_dates:
