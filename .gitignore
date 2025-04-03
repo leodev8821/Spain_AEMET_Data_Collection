@@ -1,0 +1,26 @@
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos csv generados por la app
+*.csv
+
+# Archivos JSON generados por la app
+ema_codes.json
+progress.json
+
+# Archivos txt
+*clean.txt
+*salida.txt
+
+# Environments
+env
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
