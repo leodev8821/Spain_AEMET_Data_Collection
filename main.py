@@ -1,6 +1,6 @@
 from datetime import datetime
 import re
-from scripts import historical_data, obtain_stations_EMA_code, temp_to_csv
+from scripts import historical_data, obtain_stations_EMA_code, data_to_csv
 import logging
 
 # Configurar logging
@@ -29,9 +29,9 @@ def main():
     print("\n*** MENÚ DE LA APLICACIÓN ***")
     print("1. Obtener códigos de las estaciones")
     print("2. Obtener los datos históricos")
-    print("3. Crear temperatura.csv")
-    print("4. Crear precipitaciones.csv")
-    print("5. Crear racha.csv")
+    print("3. Crear temperature.csv")
+    print("4. Crear precipitation.csv")
+    print("5. Crear hrMedia.csv")
     print("6. Terminar la ejecución")
     
     selection = input("Selecciona una opción: ").upper()
@@ -53,15 +53,15 @@ def main():
                     
         case "3":
             logger.info("Creando temperature.csv...")
-            temp_to_csv()
+            data_to_csv('temperature')
                     
         case "4":
-            logger.info("Creando precipitaciones.csv...")
-            temp_to_csv()
+            logger.info("Creando precipitation.csv...")
+            data_to_csv('precipitation')
         
         case "5":
-            logger.info("Creando racha.csv...")
-            temp_to_csv()
+            logger.info("Creando hrMedia.csv...")
+            data_to_csv('hrMedia')
 
         case "6":
             break

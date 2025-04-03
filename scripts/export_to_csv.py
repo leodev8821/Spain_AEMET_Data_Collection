@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import json
 
-def temp_to_csv():
+def data_to_csv(name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     api_dir = os.path.dirname(script_dir)
     temp_csv_dir = os.path.join(api_dir, 'csv')
@@ -24,19 +24,19 @@ def temp_to_csv():
             print(f"Procesando {town} ({code})...")
             
             for date, values in station_info[code]['date'].items():
-                temp_str = values['values']['temperature']
+                name_str = values['values'][name]
                 
-                # Verificar si el valor de temperature es un número
-                if temp_str == 'no_data':
-                    tempMed = temp_str
+                # Verificar si el valor del campo es un número
+                if name_str == 'no_data' or name_str == 'Ip' or name_str == 'Acum':
+                    unit_name = name_str
                 else:
-                    tempMed = float(str(temp_str).replace(',', '.'))
+                    unit_name = float(str(name_str).replace(',', '.'))
                 # Fecha;Codigo_municipio;Provincia;Municipio;Hora;<Datos>;ts_insert;ts_update
                 data.append({
                         'date': date,
                         'province': station_info[code]['province'],
                         'town': station_info[code]['town'],
-                        'tempMed': tempMed,
+                        name: unit_name,
                         'ts_insert': values['ts_insert'],
                         'ts_update': values['ts_update']
                 })
@@ -50,7 +50,7 @@ def temp_to_csv():
     if all_dfs:
         df_final = pd.concat(all_dfs, ignore_index=True)
 
-        temp_csv = os.path.join(temp_csv_dir, 'temperatura.csv')
+        temp_csv = os.path.join(temp_csv_dir, f'{name}.csv')
 
         df_final.to_csv(
             temp_csv, 
@@ -61,7 +61,7 @@ def temp_to_csv():
             index=False
         )
 
-        print(f"Archivo de temperatura creado correctamente en {temp_csv_dir} ")
+        print(f"Archivo de {name} creado correctamente en {temp_csv_dir} ")
         return None
     else:
         print("No hay datos válidos para procesar")
