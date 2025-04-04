@@ -31,5 +31,8 @@ Seleccionar las opciones del menú en la consola que son:
 5. **Crear viento.csv**
   --> Con los datos históricos obtenidos, crea un csv con los datos de *date, province, town, avg_vel, max_vel, ts_insert, ts_update*
 
+5. **Crear humedad_relativa.csv**
+  --> Con los datos históricos obtenidos, crea un csv con los datos de *date, province, town, avg_rel_hum, max_rel_hum, min_rel_hum, ts_insert, ts_update*
+
 6. **Terminar la ejecución**
   --> Finaliza la ejecución de la aplicación
