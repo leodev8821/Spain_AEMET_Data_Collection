@@ -1,0 +1,8 @@
+[
+    {
+        "station_code": "B603X",
+        "url": "https://opendata.aemet.es/opendata/sh/3c11f2e8",
+        "server_response": "500 Server Error: Internal Server Error for url: https://opendata.aemet.es/opendata/sh/3c11f2e8",
+        "fetched_date": "2025-04-04T11:58:43.375728+00:00"
+    }
+]

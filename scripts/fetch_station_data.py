@@ -145,7 +145,6 @@ def fetch_station_data(
             if not data or not isinstance(data, list) or len(data) == 0:
                 fetched_date = datetime.now(timezone.utc).isoformat()
                 build_journal(station_code=station_code, server_response=data, fetched_url=data_url,fetched_date=fetched_date)
-                logger.warning("No se recibieron datos válidos. Ver --> '/error_journal/errors.json'")
                 return None
             
             # Procesar datos en el formato específico

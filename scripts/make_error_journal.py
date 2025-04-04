@@ -43,5 +43,5 @@ def build_journal(station_code, server_response, fetched_url, fetched_date):
     with open(error_journal_dir, 'w', encoding='utf-8') as f:
         json.dump(existing_data, f, ensure_ascii=False, indent=4)
     
-    logger.info(f"Datos guardados en {error_journal_dir}")
+    logger.info(f"No se recibieron datos válidos. Ver -->  {error_journal_dir}")
     return None
