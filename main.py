@@ -4,7 +4,7 @@ import logging
 # Configurar logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(levelname)s --> %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,11 @@ def main():
     print("\n*** MENÚ DE LA APLICACIÓN ***")
     print("1. Obtener códigos de las estaciones")
     print("2. Obtener los datos históricos")
-    print("3. Crear temperature.csv")
-    print("4. Crear precipitation.csv")
-    print("5. Crear hrMedia.csv")
-    print("6. Terminar la ejecución")
+    print("3. Crear temperatura.csv")
+    print("4. Crear precipitaciones.csv")
+    print("5. Crear viento.csv")
+    print("6. Crear humedad_relativa.csv")
+    print("7. Terminar la ejecución")
     
     selection = input("Selecciona una opción: ").upper()
     
@@ -29,7 +30,6 @@ def main():
             # Obtener códigos de estaciones
             logger.info("Obteniendo códigos de estaciones EMA...")
             obtain_stations_EMA_code()
-            logger.info("¡Códigos de estaciones EMA obtenidos!")
                     
         case "2":
             # Obtener toda la información solicitada de las estaciones en el rango de fecha
@@ -41,25 +41,30 @@ def main():
             logger.error(message)
                     
         case "3":
-            # Crea un archivo con los datos de las temperatura en /csv/temperature.csv
-            logger.info("Creando temperature.csv...")
-            data_to_csv('temperature')
+            # Crea un archivo con los datos de las temperatura en /csv/temperatura.csv
+            logger.info("Creando temperatura.csv...")
+            data_to_csv('temperatura')
                     
         case "4":
-            # Crea un archivo con los datos de las precipitaciones en /csv/precipitation.csv
-            logger.info("Creando precipitation.csv...")
-            data_to_csv('precipitation')
+            # Crea un archivo con los datos de las precipitaciones en /csv/precipitaciones.csv
+            logger.info("Creando precipitaciones.csv...")
+            data_to_csv('precipitaciones')
         
         case "5":
-            # Crea un archivo con los datos de las racha media en /csv/hrMedia.csv
-            logger.info("Creando hrMedia.csv...")
-            data_to_csv('hrMedia')
-
+            # Crea un archivo con los datos de las racha media en /csv/viento.csv
+            logger.info("Creando viento.csv...")
+            data_to_csv('viento')
+        
         case "6":
+            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
+            logger.info("Creando humedad_relativa.csv...")
+            data_to_csv('humedad_relativa')
+
+        case "7":
             break
         
         case _:
-            print("Opción no válida")
+            logger.warning("Opción no válida")
       
    return None
 

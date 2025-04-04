@@ -9,14 +9,12 @@ import time
 
 # Configuración global
 DEFAULT_START_DATE = '2025-01-01T00:00:00UTC'
-REQUEST_DELAY = 3.0  # segundos entre solicitudes 
-STATION_TIMEOUT = 30  # segundos máximo por estación
-MAX_RETRIES = 3  # reintentos por estación
+REQUEST_DELAY = 3.0  # segundos entre solicitudes
 
 # Configurar logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(levelname)s --> %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -47,9 +45,9 @@ def save_progress(progress_file, processed_dates, stations_data):
     except Exception as e:
         logger.error(f"Error al guardar progreso: {e}")
 
-# Actualiza el timestamp de actualización para la fecha actual
+# Actualiza el timestamp de actualización para la fecha actual en string
 def update_timestamp(stations_data, station_code, date_key):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).isoformat()
     stations_data[station_code]['date'][date_key]['ts_update'] = now
 
 # Obtiene la información histórica de las estaciones de meteorología de la AEMET - España
@@ -60,12 +58,16 @@ def historical_data(final_date):
         api_dir = os.path.dirname(script_dir)
         progress_file = os.path.join(api_dir, 'json', 'progress.json')
         output_file = os.path.join(api_dir, 'json', 'weather_data.json')
+        now = datetime.now(timezone.utc).isoformat()
 
         # 2. Leer los códigos de las estaciones desde JSON
         logger.info("Obteniendo códigos de estaciones EMA")
         json_path = os.path.join(api_dir, 'json', 'ema_codes.json')
-        with open(json_path, 'r', encoding='utf-8') as archive:
-            ema_codes = json.load(archive)
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as archive:
+                ema_codes = json.load(archive)
+        else:
+            raise ValueError("Debes crear primero el archivo de códigos EMA - Opción 1")
 
         # 3. Cargar progreso previo
         processed_dates, stations_data = load_progress(progress_file)
@@ -76,7 +78,7 @@ def historical_data(final_date):
         encoded_end_date = end_date_str.replace(':', '%3A')
 
         # 5. Procesar estaciones
-        total_stations = len(ema_codes)
+        total_stations = len(ema_codes) - len(processed_dates)
 
         for i, (station_name, station_code) in enumerate(ema_codes.items(), 1):
             logger.info(f"[{i}/{total_stations}] Procesando estación: {station_name}")
@@ -88,7 +90,8 @@ def historical_data(final_date):
             result = fetch_station_data(
                 encoded_init_date,
                 encoded_end_date,
-                station_code
+                station_code,
+                last_request_time=now
             )
 
             # Si no hay información de esa estación, continúa con la siguiente
@@ -101,14 +104,13 @@ def historical_data(final_date):
                 processed_dates[station_code] = set()
 
             # Filtrar solo las fechas que no hemos procesado
-            now = datetime.now(timezone.utc)
             new_data = {}
             for date, values in result['date'].items():
                 if date not in existing_dates:
                     new_data[date] = {
                         'values': values,
-                        'ts_insert': now.isoformat(),
-                        'ts_update': now.isoformat()
+                        'ts_insert': now,
+                        'ts_update': now
                     }
 
             # Si no hay información nueva para la estación, sigue con la siguiente
@@ -146,13 +148,16 @@ def historical_data(final_date):
         if stations_data:
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(stations_data, f, ensure_ascii=False, indent=4)
+            os.remove(progress_file)
             logger.info(f"Datos guardados en {output_file}")
             return stations_data
         
         logger.warning("No se obtuvieron datos válidos")
         return None
         
+    except ValueError as e:
+        logger.error(f"Error al acceder al JSON: {str(e)}")
     except json.JSONDecodeError as e:
         logger.error(f"Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+        logger.error(f"Error inesperado ScriptV2: {str(e)}", exc_info=True)
