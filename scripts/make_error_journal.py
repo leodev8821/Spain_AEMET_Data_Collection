@@ -16,6 +16,8 @@ def build_journal(station_code, server_response, fetched_url, fetched_date):
     api_dir = os.path.dirname(script_dir)
     error_journal_dir = os.path.join(api_dir, 'error_journal', 'errors.json')
 
+    os.makedirs(os.path.dirname(error_journal_dir), exist_ok=True)
+
     json_format = {
         "station_code": station_code,
         "url": fetched_url,

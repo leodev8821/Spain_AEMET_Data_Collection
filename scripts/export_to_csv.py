@@ -37,6 +37,8 @@ def data_to_csv(name):
         all_data_dir = os.path.join(api_dir, 'json', 'weather_data.json')
         ema_codes_dir = os.path.join(api_dir, 'json', 'ema_codes.json')
 
+        os.makedirs(os.path.dirname(temp_csv_dir), exist_ok=True)
+
         all_data = verify_json_docs(all_data_dir)
         ema_codes = verify_json_docs(ema_codes_dir)
 
