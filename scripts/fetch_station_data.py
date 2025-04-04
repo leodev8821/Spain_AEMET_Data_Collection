@@ -19,6 +19,7 @@ from tenacity import (
     RetryError,
     before_sleep_log
 )
+from .make_error_journal import *
 import logging
 
 # Configurar logging
@@ -140,8 +141,11 @@ def fetch_station_data(
             
             # Segunda petición para los datos reales
             data = _fetch_with_retry(data_url)
+
             if not data or not isinstance(data, list) or len(data) == 0:
-                logger.warning("No se recibieron datos válidos")
+                fetched_date = datetime.now(timezone.utc).isoformat()
+                build_journal(station=station_code, server_response=data, fetched_url=data_url,fetched_date=fetched_date)
+                logger.warning("No se recibieron datos válidos. Ver --> '/error_journal/errors.json'")
                 return None
             
             # Procesar datos en el formato específico
