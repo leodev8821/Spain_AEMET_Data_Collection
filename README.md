@@ -36,3 +36,19 @@ Seleccionar las opciones del menú en la consola que son:
 
 6. **Terminar la ejecución**
   --> Finaliza la ejecución de la aplicación
+
+# Estructura de la aplicación
+````txt
+\aemet_api
++--csv
++--error_journal
++--json
+\--scripts
+    +--__init__.py
+    +--date_validate.py
+    +--export_to_csv.py
+    +--fetch_station_data.py
+    +--make_error_journal.py
+    +--obtain_ema_code.py
+    +--scriptv2.py
+```

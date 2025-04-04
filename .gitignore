@@ -11,6 +11,7 @@ __pycache__/
 ema_codes.json
 progress.json
 weather_data.json
+errors.json
 
 # Archivos txt
 *clean.txt
