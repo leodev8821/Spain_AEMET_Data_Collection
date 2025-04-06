@@ -9,6 +9,7 @@ __pycache__/
 
 # Archivos JSON generados por la app
 ema_codes.json
+codes_group.json
 progress.json
 weather_data.json
 errors.json
