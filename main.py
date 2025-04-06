@@ -1,4 +1,4 @@
-from scripts import historical_data, obtain_stations_EMA_code, data_to_csv, date_validation
+from scripts import historical_data, obtain_stations_EMA_code, data_to_csv, date_validation, group_codes
 import logging
 
 # Configurar logging
@@ -21,7 +21,8 @@ def main():
     print("4. Crear precipitaciones.csv")
     print("5. Crear viento.csv")
     print("6. Crear humedad_relativa.csv")
-    print("7. Terminar la ejecución")
+    print("7. Agrupar codigos en 25")
+    print("8. Terminar la ejecución")
     
     selection = input("Selecciona una opción: ").upper()
     
@@ -59,8 +60,13 @@ def main():
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
             logger.info("Creando humedad_relativa.csv...")
             data_to_csv('humedad_relativa')
-
+        
         case "7":
+            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
+            logger.info("Agrupando codigos EMA...")
+            group_codes()
+
+        case "8":
             break
         
         case _:

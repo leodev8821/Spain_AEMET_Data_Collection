@@ -1,8 +1,8 @@
 import json
 import os
 
-# Función para agrupar códigos EMA en grupos de 100
-def group_ema_codes():
+# Función para agrupar códigos EMA en grupos de 25
+def group_codes():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     api_dir = os.path.dirname(script_dir)
     emca_codes_path = os.path.join(api_dir, 'json', 'ema_codes.json')
@@ -14,7 +14,7 @@ def group_ema_codes():
 
 
     new_grouped_dict = {}
-    group_size = 100
+    group_size = 25
     ema_codes = list(ema_codes.values())
 
     for i in range(0, len(ema_codes), group_size):
