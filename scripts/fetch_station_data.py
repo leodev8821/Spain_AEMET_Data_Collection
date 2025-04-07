@@ -59,28 +59,17 @@ api_retry = retry(
 )
 
 # Realiza peticiones HTTP con manejo de rate limiting
-def api_request(url, headers=None, timeout=30):
-    try:
+def api_request(url, headers=None, timeout=30, max_attempts=3):
+    @retry(stop=stop_after_attempt(max_attempts),
+           wait=wait_exponential(multiplier=1, min=10, max=61))
+    def _request():
         response = requests.get(url, headers=headers, timeout=timeout)
-
-        # Si lanza un error de exceso de peticiones, setea el tiempo para reintento en 61 segundos
-        if is_rate_limit_error(response):
-            retry_after = 61
-            raise RateLimitException(retry_after)
-        
-        # Lanza cualquier error de fetch
         response.raise_for_status()
-        # Retorna la respuesta
         return response.json() if response.content else None
-    
-    except RequestException as e:
-        logger.error(f"Error en la petición HTTP: {str(e)}")
-        return e
-    except Exception as e:
-        logger.error(f"Error inesperado api_request: {str(e)}")
-        return e
+    return _request()
 
 # Función que obtiene los datos de cada estación y los alamacena en un JSON
+@api_retry
 def fetch_station_data(
     encoded_init_date,
     encoded_end_date,
@@ -89,7 +78,6 @@ def fetch_station_data(
 ):
 
     # Función interna para manejar los reintentos
-    @api_retry
     def _fetch_with_retry(url, headers=None):
         return api_request(url, headers=headers)
 
@@ -121,7 +109,6 @@ def fetch_station_data(
         }
         
         # Primera petición para obtener URL de los datos
-        # logger.info(f"Obteniendo datos para estación {station_code}")
         logger.info(f"Obteniendo datos del grupo...")
         response = _fetch_with_retry(weather_values_url, headers=headers)
 
@@ -156,7 +143,6 @@ def fetch_station_data(
                     "date": {}
                 }
 
-                
                 # Recorre la fecha para insertar los datos
                 for day_data in data:
                     date = day_data.get('fecha', 'no_data')
@@ -179,11 +165,6 @@ def fetch_station_data(
             error_msg = response.get('descripcion', 'Error desconocido')
             logger.error(f"Error en la API: {error_msg}")
             return None
-    
-    except RateLimitException as e:
-        logger.warning(f"Rate limit alcanzado. Esperando {e.retry_after} segundos...")
-        time.sleep(e.retry_after)
-        return None
     
     except RetryError as e:
         logger.error(f"Fallo después de múltiples intentos: {str(e)}")

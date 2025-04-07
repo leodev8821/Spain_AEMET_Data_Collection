@@ -212,31 +212,46 @@ def build_journal(codes_group, server_response, fetched_url, fetched_date):
 def load_progress(progress_file: str):
     '''Función para cargar el progreso previo desde archivo si existe'''
     try:
-        # Verificar y cargar el archivo de progreso
         data = verify_json_docs(
             progress_file,
             "No existe el archivo de progreso. Se empezará desde cero."
         )
-        # Convertir las listas de fechas a sets
-        processed_dates = {k: set(v) for k, v in data.get('processed_dates', {}).items()}
-        stations_data = data.get('stations_data', {})
+        
+        processed_dates = defaultdict(set)
+        
+        # Extraer fechas del formato {"station_group": {"dates": [...]}}
+        for station_group, dates_data in data.get("processed_dates", {}).items():
+            if not isinstance(dates_data, dict) or "dates" not in dates_data:
+                raise ValueError(f"Formato inválido en processed_dates para {station_group}")
+            processed_dates[station_group] = set(dates_data["dates"])
+        
+        stations_data = data.get("stations_data", {})
         return processed_dates, stations_data
+    
     except ValueError as e:
-        logger.warning(f"{e}")
+        logger.warning(f"Error en el formato del archivo: {e}")
         return defaultdict(set), {}
     except Exception as e:
-        logger.warning(f"Error al cargar progreso previo: {e}")
+        logger.warning(f"Error al cargar progreso: {e}")
         return defaultdict(set), {}
 
 def save_progress(progress_file, processed_dates, stations_data):
-    '''Función para guardar el progreso actual'''
+    '''Función para guardar el progreso de las estaciones consultadas'''
     try:
-        progress_data = {
-            'processed_dates': {k: list(v) for k, v in processed_dates.items()},
-            'stations_data': stations_data
+        # Convertir los sets de fechas a listas y estructurarlos bajo "dates"
+        transformed_dates = {
+            station_group: {"dates": list(dates)} 
+            for station_group, dates in processed_dates.items()
         }
-        with open(progress_file, 'w', encoding='utf-8') as f:
+        
+        progress_data = {
+            "processed_dates": transformed_dates,
+            "stations_data": stations_data
+        }
+        
+        with open(progress_file, "w", encoding="utf-8") as f:
             json.dump(progress_data, f, ensure_ascii=False, indent=4)
+    
     except Exception as e:
         logger.error(f"Error al guardar progreso: {e}")
 

@@ -24,6 +24,7 @@ def historical_data(final_date):
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
+        
         progress_file_path = os.path.join(api_dir, 'json', 'progress.json')
         output_file_path = os.path.join(api_dir, 'json', 'weather_data.json')
         now = datetime.now(timezone.utc).isoformat()
