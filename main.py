@@ -1,4 +1,4 @@
-from scripts import historical_data, obtain_stations_EMA_code, data_to_csv, date_validation, group_codes
+from scripts import historical_data, obtain_and_group_stations_codes, data_to_csv, date_validation
 import logging
 
 # Configurar logging
@@ -7,8 +7,6 @@ logging.basicConfig(
     format='%(levelname)s --> %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
 
 # Main de la aplicación
 def main():
@@ -21,8 +19,7 @@ def main():
     print("4. Crear precipitaciones.csv")
     print("5. Crear viento.csv")
     print("6. Crear humedad_relativa.csv")
-    print("7. Agrupar codigos en 25")
-    print("8. Terminar la ejecución")
+    print("0. Terminar la ejecución")
     
     selection = input("Selecciona una opción: ").upper()
     
@@ -30,7 +27,7 @@ def main():
         case "1":
             # Obtener códigos de estaciones
             logger.info("Obteniendo códigos de estaciones EMA...")
-            obtain_stations_EMA_code()
+            obtain_and_group_stations_codes()
                     
         case "2":
             # Obtener toda la información solicitada de las estaciones en el rango de fecha
@@ -60,13 +57,8 @@ def main():
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
             logger.info("Creando humedad_relativa.csv...")
             data_to_csv('humedad_relativa')
-        
-        case "7":
-            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
-            logger.info("Agrupando codigos EMA...")
-            group_codes()
 
-        case "8":
+        case "0":
             break
         
         case _:

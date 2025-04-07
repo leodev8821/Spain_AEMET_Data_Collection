@@ -1,15 +1,16 @@
+import os
+import time
 from datetime import datetime, timedelta, timezone
 import requests
+from http.client import RemoteDisconnected
+from dotenv import load_dotenv
+from .utils import *
+import logging
 from requests.exceptions import (
     ConnectionError,
     Timeout,
-    RequestException,
-    JSONDecodeError
+    RequestException
 )
-from http.client import RemoteDisconnected
-import time
-import os
-from dotenv import load_dotenv
 from tenacity import (
     retry,
     retry_if_exception,
@@ -19,8 +20,6 @@ from tenacity import (
     RetryError,
     before_sleep_log
 )
-from .make_error_journal import *
-import logging
 
 # Configurar logging
 logging.basicConfig(
@@ -122,7 +121,8 @@ def fetch_station_data(
         }
         
         # Primera petición para obtener URL de los datos
-        logger.info(f"Obteniendo datos para estación {station_code}")
+        # logger.info(f"Obteniendo datos para estación {station_code}")
+        logger.info(f"Obteniendo datos del grupo...")
         response = _fetch_with_retry(weather_values_url, headers=headers)
 
         # Si response es una excepción (RateLimitException, RequestException, etc.)
@@ -137,7 +137,6 @@ def fetch_station_data(
         # Si hay respuesta correcta, obtengo la url para el siguiente fetch
         if response.get('estado') == 200:
             data_url = response.get('datos')
-            logger.debug(f"URL de datos obtenida: {data_url}")
             
             # Segunda petición para los datos reales
             data = _fetch_with_retry(data_url)
@@ -147,30 +146,35 @@ def fetch_station_data(
                 build_journal(station_code=station_code, server_response=data, fetched_url=data_url,fetched_date=fetched_date)
                 return None
             
-            # Procesar datos en el formato específico
-            station_info = {
-                "town_code": data[0].get('indicativo', 'no_data'),
-                "province": data[0].get('provincia', 'no_data'),
-                "town": data[0].get('nombre', 'no_data'),
-                "date": {}
-            }
-            
-            # Recorre la fecha para insertar los datos
-            for day_data in data:
-                date = day_data.get('fecha', 'no_data')
-                station_info["date"][date] = {
-                    "avg_t": day_data.get('tmed', 'no_data'),
-                    "max_t": day_data.get('tmax', 'no_data'),
-                    "min_t": day_data.get('tmin', 'no_data'),
-                    "precip": day_data.get('prec', 'no_data'),
-                    "avg_vel": day_data.get('velmedia', 'no_data'),
-                    "max_vel": day_data.get('racha', 'no_data'),
-                    "avg_rel_hum": day_data.get('hrMedia', 'no_data'),
-                    "max_rel_hum": day_data.get('hrMax', 'no_data'),
-                    "min_rel_hum": day_data.get('hrMin', 'no_data'),
+            grouped_station = []
+            for i in range(len(data)):
+                # Procesar datos en el formato específico
+                station_info = {
+                    "town_code": data[i].get('indicativo', 'no_data'),
+                    "province": data[i].get('provincia', 'no_data'),
+                    "town": data[i].get('nombre', 'no_data'),
+                    "date": {}
                 }
-            
-            return station_info
+
+                
+                # Recorre la fecha para insertar los datos
+                for day_data in data:
+                    date = day_data.get('fecha', 'no_data')
+                    station_info["date"][date] = {
+                        "avg_t": day_data.get('tmed', 'no_data'),
+                        "max_t": day_data.get('tmax', 'no_data'),
+                        "min_t": day_data.get('tmin', 'no_data'),
+                        "precip": day_data.get('prec', 'no_data'),
+                        "avg_vel": day_data.get('velmedia', 'no_data'),
+                        "max_vel": day_data.get('racha', 'no_data'),
+                        "avg_rel_hum": day_data.get('hrMedia', 'no_data'),
+                        "max_rel_hum": day_data.get('hrMax', 'no_data'),
+                        "min_rel_hum": day_data.get('hrMin', 'no_data'),
+                    }
+                
+                grouped_station.append(station_info)
+            logger.info(f"Información del grupo extraída correctamente")
+            return grouped_station
         else:
             error_msg = response.get('descripcion', 'Error desconocido')
             logger.error(f"Error en la API: {error_msg}")
