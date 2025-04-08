@@ -91,6 +91,22 @@ def verify_json_docs(json_path_dir:str, message: str):
                 return json_info
     else: 
         raise ValueError(message)
+    
+def re_fetch_errors_journal():
+    '''Función para obtener los url de error_journal/errors.json'''
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        api_dir = os.path.dirname(script_dir)
+        errors_log_dir = os.path.join(api_dir, 'error_journal', 'errors.json')
+        error_data = verify_json_docs(errors_log_dir, message="No esta creado errors.json")
+        url_to_fetch = []
+
+        for i in range(len(error_data)):
+            response = error_data[i].get("server_response", "no_data")
+            url_to_fetch.append(response[response.index("http"):len(response)])
+        return url_to_fetch
+    except ValueError as e:
+        logger.error(f"Error al cargar errors.json {str(e)}")
 
 
 def data_to_csv(name: str):
@@ -114,8 +130,8 @@ def data_to_csv(name: str):
 
         os.makedirs(os.path.dirname(temp_csv_dir), exist_ok=True)
 
-        all_data = verify_json_docs(all_data_dir)
-        ema_codes = verify_json_docs(ema_codes_dir)
+        all_data = verify_json_docs(all_data_dir, message="No esta creado weather_codes.json")
+        ema_codes = verify_json_docs(ema_codes_dir, message="No esta creado ema_codes.json")
 
         all_dfs = []
 
@@ -259,3 +275,11 @@ def update_timestamp(stations_data, station_code, date_key):
     '''Función para actualiza el timestamp de updatedAt para la fecha actual en string'''
     now = datetime.now(timezone.utc).isoformat()
     stations_data[station_code]['date'][date_key]['ts_update'] = now
+
+def build_url(encoded_init_date:str, encoded_end_date:str, stations_codes:str):
+    '''Función para construir la url de los'''
+    weather_values_url = (
+            f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/'
+            f'fechaini/{encoded_init_date}/fechafin/{encoded_end_date}/estacion/{stations_codes}'
+        )
+    return(weather_values_url)

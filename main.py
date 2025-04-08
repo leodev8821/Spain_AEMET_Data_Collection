@@ -1,4 +1,4 @@
-from scripts import historical_data, obtain_and_group_stations_codes, data_to_csv, date_validation
+from scripts import historical_data, obtain_and_group_stations_codes, data_to_csv, date_validation, re_fetch_errors_journal
 import logging
 
 # Configurar logging
@@ -19,6 +19,7 @@ def main():
     print("4. Crear precipitaciones.csv")
     print("5. Crear viento.csv")
     print("6. Crear humedad_relativa.csv")
+    print("7. Hacer fetch a los errores")
     print("0. Terminar la ejecución")
     
     selection = input("Selecciona una opción: ").upper()
@@ -57,6 +58,12 @@ def main():
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
             logger.info("Creando humedad_relativa.csv...")
             data_to_csv('humedad_relativa')
+        
+        case "7":
+            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
+            logger.info("Obteniendo información desde errors.json...")
+            url = re_fetch_errors_journal()
+            logger.info(f"Listado de url {url}")
 
         case "0":
             break

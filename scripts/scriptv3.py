@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_START_DATE = '2025-01-01T00:00:00UTC'
 REQUEST_DELAY = 3.0  # segundos entre solicitudes
 
-# Obtiene la información histórica de las estaciones de meteorología de la AEMET - España
 def historical_data(final_date):
+    '''Obtiene la información histórica de las estaciones de meteorología de la AEMET - España'''
     try:
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -52,9 +52,6 @@ def historical_data(final_date):
             if stations_codes not in processed_dates:
                 processed_dates[stations_codes] = set()
 
-            # Determinar fechas faltantes para esta estación
-            #existing_dates = processed_dates.get(stations_codes, set())
-
             # Obtener datos de la estación (solo fechas faltantes)
             result = fetch_station_data(
                 encoded_init_date,
@@ -67,10 +64,6 @@ def historical_data(final_date):
             if not result:
                 logger.warning(f"No se obtuvieron datos para el {group}")
                 continue
-
-            # Asegurarnos de que la estación existe en processed_dates
-            # if stations_codes not in processed_dates:
-            #     processed_dates[stations_codes] = set()
 
             # Iterar sobre cada estación en result
             new_dates_for_group  = set()
@@ -95,9 +88,6 @@ def historical_data(final_date):
                     logger.info(f"No hay datos nuevos para {current_station_code}")
                     continue
 
-                # Obtener el código de la estación actual (puede variar si hay múltiples)
-                #current_station_code = station_data['town_code']
-
                 # Actualizar los datos de la estación
                 if current_station_code not in stations_data:
                     stations_data[current_station_code] = {
@@ -111,16 +101,11 @@ def historical_data(final_date):
                 stations_data[current_station_code]['date'].update(new_data)
                 
                 # Actualizar fechas procesadas
-                #processed_dates[current_station_code].update(new_data.keys())
             processed_dates[current_station_code].update(new_dates_for_group)
-
-                # Actualizar timestamps para las nuevas fechas
-                # for date_key in new_data.keys():
-                #     update_timestamp(stations_data, current_station_code, date_key)
 
             # Guardar progreso cada grupo de estaciones o al final
             if i % 1 == 0 or i == total_stations:
-                logger.info(f"[{i}/{total_stations}] grupo de estaciones guardado en progress")
+                logger.info(f"[{i}] grupo de estaciones guardado en progress")
                 save_progress(progress_file_path, processed_dates, stations_data)
 
             # Una espera para la nueva fetch
@@ -145,3 +130,4 @@ def historical_data(final_date):
         logger.error(f"Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
         logger.error(f"Error inesperado ScriptV3: {str(e)}", exc_info=True)
+
