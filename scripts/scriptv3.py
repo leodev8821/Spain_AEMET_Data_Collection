@@ -151,8 +151,40 @@ def data_from_error_journal():
             logger.error(f"No se obtuvieron datos válidos")
             raise ValueError(f"No se obtuvieron datos válidos")
         
-        with open(output_file_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, ensure_ascii=False, indent=4)
+        new_dates_for_group  = set()
+        for i in range(len(result)):
+            town_code = result[i].get("town_code")
+            date = result[i].get("date")
+
+            all_data_code = weather_data.get(town_code)
+
+            new_data = {}
+            if all_data_code:
+                if date not in all_data_code.get('date'):
+
+                    for date, values in result['date'].items():
+                        new_data[date] = {
+                            'values': values,
+                            'ts_insert': now,
+                            'ts_update': now
+                        }
+
+                        new_dates_for_group.add(date)
+                    all_data_code[current_station_code] = {
+                        "town_code": current_station_code,
+                        "province": station_data["province"],
+                        "town": station_data["town"],
+                        "date": {}
+                    }
+
+
+                    print("--------- weather -------------")
+                    print(date)
+                    print("--------- end weather -------------")
+
+        
+        # with open(output_file_path, 'w', encoding='utf-8') as f:
+        #         json.dump(result, f, ensure_ascii=False, indent=4)
         
 
         # # Iterar sobre cada estación en result
@@ -208,4 +240,4 @@ def data_from_error_journal():
     except json.JSONDecodeError as e:
         logger.error(f"Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado ScriptV3: {str(e)}", exc_info=True)
+        logger.error(f"Error inesperado data_from_error_journal: {str(e)}", exc_info=True)
