@@ -1,4 +1,4 @@
-from .scriptv3 import historical_data
+from .scriptv3 import historical_data, data_from_error_journal
 from .utils import obtain_and_group_stations_codes, date_validation, data_to_csv, build_journal, save_progress, load_progress, update_timestamp, re_fetch_errors_journal
 
 __all__ = [

@@ -218,119 +218,133 @@ def fetch_station_data(
         return None
     
 
-def fetch_error_data(
-    last_request_time=None
-):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    api_dir = os.path.dirname(script_dir)
-    weather_data_dir = os.path.join(api_dir, 'json', 'weather_data.json')
-    weather_data = verify_json_docs(weather_data_dir, message="No esta creado weather_data.json")
-    
-    data = None
+def fetch_error_data(last_request_time=None):
+    """Función para obtener los datos de las estaciones que fallaron anteriormente error_journal/errors.json"""
+    grouped_stations = []
     data_url = None
+    current_url = None
 
-    # Función interna para manejar los reintentos
+    # Función interna para reintentos
     def _fetch_with_retry(url, headers=None):
         return api_request(url, headers=headers)
 
     try:
-        # Obtengo la lista de url donde ha habido errores
-        url_list = fetch_error_data()
+        # Obtener la lista de las url que fallaron
+        url_list = re_fetch_errors_journal()
+        if not url_list:
+            logger.info("No hay URL's para procesar")
+            return None
 
         # Control de tasa global (1 petición por segundo como mínimo)
         if last_request_time:
             last_request_time = datetime.fromisoformat(last_request_time)
             elapsed_time = datetime.now(timezone.utc) - last_request_time
             if elapsed_time < timedelta(seconds=1):
-                time.sleep(1 - elapsed_time.total_seconds())
-        
-        # Verifico que existe AEMET_API_KEY
+                sleep_time = 1 - elapsed_time.total_seconds()
+                time.sleep(sleep_time)
+
+        # Verificar que la API_KEY este configurada
         api_key = os.getenv("AEMET_API_KEY")
         if not api_key:
             logger.error("API key no configurada")
             return None
         
-        # Headers requeridos por la API
+        # Configuración de los headers
         headers = {
             'accept': 'application/json',
             'api_key': api_key,
             'cache-control': 'no-cache'
         }
-        
-        # Primera petición para obtener URL de los datos
-        logger.info(f"Obteniendo datos del grupo...")
+
+        # Procesar cada url que falló
+        i=0
         for url in url_list:
+            i += 1
+            current_url = url
+            logger.info(f"Procesando [{i}/{len(url_list)}]")
+            
+            # Primera petición para obtner la url con los datos
             response = _fetch_with_retry(url, headers=headers)
 
-            # Si response es una excepción (RateLimitException, RequestException, etc.)
             if isinstance(response, Exception):
                 raise response
-            
-            # Si no hay respuesta válida
             if not response:
                 logger.error("No se pudo obtener la URL de datos")
-                return None
+                continue
             
-            # Si hay respuesta correcta, obtengo la url para el siguiente fetch
-            if response.get('estado') == 200:
-                data_url = response.get('datos')
-                
-                # Segunda petición para los datos reales
-                data = _fetch_with_retry(data_url)
-
-                if not data or not isinstance(data, list) or len(data) == 0:
-                    fetched_date = datetime.now(timezone.utc).isoformat()
-                    build_journal(codes_group=url, server_response=data, fetched_url=data_url,fetched_date=fetched_date)
-                    return None
-                
-                grouped_station = []
-                for i in range(len(data)):
-                    # Procesar datos en el formato específico
-                    station_info = {
-                        "town_code": data[i].get('indicativo', 'no_data'),
-                        "province": data[i].get('provincia', 'no_data'),
-                        "town": data[i].get('nombre', 'no_data'),
-                        "date": {}
-                    }
-
-                    # Recorre la fecha para insertar los datos
-                    for day_data in data:
-                        date = day_data.get('fecha', 'no_data')
-                        station_info["date"][date] = {
-                            "avg_t": day_data.get('tmed', 'no_data'),
-                            "max_t": day_data.get('tmax', 'no_data'),
-                            "min_t": day_data.get('tmin', 'no_data'),
-                            "precip": day_data.get('prec', 'no_data'),
-                            "avg_vel": day_data.get('velmedia', 'no_data'),
-                            "max_vel": day_data.get('racha', 'no_data'),
-                            "avg_rel_hum": day_data.get('hrMedia', 'no_data'),
-                            "max_rel_hum": day_data.get('hrMax', 'no_data'),
-                            "min_rel_hum": day_data.get('hrMin', 'no_data'),
-                        }
-                    
-                    grouped_station.append(station_info)
-                logger.info(f"Información del grupo extraída correctamente")
-                return grouped_station
-            else:
+            # Verifica la respuesta de la API
+            if response.get('estado') != 200:
                 error_msg = response.get('descripcion', 'Error desconocido')
                 logger.error(f"Error en la API: {error_msg}")
-                return None
-    
+                continue
+
+            data_url = response.get('datos')
+            if not data_url:
+                logger.error("No se encontró URL de datos en la respuesta")
+                continue
+
+            # Segunda petición para obtener los datos
+            data = _fetch_with_retry(data_url)
+            
+            # Validación de data
+            if not data or not isinstance(data, list):
+                logger.error("Datos no válidos o vacíos recibidos")
+                fetched_date = datetime.now(timezone.utc).isoformat()
+                build_journal(
+                    codes_group=url,
+                    server_response=data,
+                    fetched_url=data_url,
+                    fetched_date=fetched_date
+                )
+                continue
+
+            # Procesar la información obtenida en data
+            for station_data in data:
+                if not isinstance(station_data, dict):
+                    continue
+
+                station_info = {
+                    "town_code": station_data.get('indicativo', 'no_data'),
+                    "province": station_data.get('provincia', 'no_data'),
+                    "town": station_data.get('nombre', 'no_data'),
+                    "date": {}
+                }
+
+                date = station_data.get('fecha', 'no_data')
+                station_info["date"][date] = {
+                    "avg_t": station_data.get('tmed', 'no_data'),
+                    "max_t": station_data.get('tmax', 'no_data'),
+                    "min_t": station_data.get('tmin', 'no_data'),
+                    "precip": station_data.get('prec', 'no_data'),
+                    "avg_vel": station_data.get('velmedia', 'no_data'),
+                    "max_vel": station_data.get('racha', 'no_data'),
+                    "avg_rel_hum": station_data.get('hrMedia', 'no_data'),
+                    "max_rel_hum": station_data.get('hrMax', 'no_data'),
+                    "min_rel_hum": station_data.get('hrMin', 'no_data'),
+                }
+
+                grouped_stations.append(station_info)
+
+            logger.info(f"Información del url {i} extraída correctamente")
+
+        return grouped_stations if grouped_stations else None
+
     except RetryError as e:
         logger.error(f"Fallo después de múltiples intentos: {str(e)}")
         fetched_date = datetime.now(timezone.utc).isoformat()
         build_journal(
-            codes_group=station_code, 
-            server_response=str(e), 
+            codes_group=current_url if current_url else "URL no disponible",
+            server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
-            fetched_date=fetched_date)
+            fetched_date=fetched_date
+        )
         return None
     
     except Exception as e:
-        logger.error(f"Error inesperado fetch_station_data: {str(e)}", exc_info=True)
+        logger.error(f"Error inesperado en fetch_error_data: {str(e)}", exc_info=True)
         fetched_date = datetime.now(timezone.utc).isoformat()
         build_journal(
-            codes_group=station_code, 
+            codes_group=current_url if current_url else "URL no disponible",
             server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date

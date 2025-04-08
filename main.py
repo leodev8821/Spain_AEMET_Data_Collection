@@ -1,4 +1,4 @@
-from scripts import historical_data, obtain_and_group_stations_codes, data_to_csv, date_validation, re_fetch_errors_journal
+from scripts import historical_data, obtain_and_group_stations_codes, data_to_csv, date_validation, data_from_error_journal
 import logging
 
 # Configurar logging
@@ -62,8 +62,7 @@ def main():
         case "7":
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
             logger.info("Obteniendo información desde errors.json...")
-            url = re_fetch_errors_journal()
-            logger.info(f"Listado de url {url}")
+            data_from_error_journal()
 
         case "0":
             break
