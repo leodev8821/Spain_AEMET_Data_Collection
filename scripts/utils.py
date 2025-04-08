@@ -190,11 +190,11 @@ def data_to_csv(name: str):
     except ValueError as e:
         logger.error(f"Error al acceder al JSON: {str(e)}")
 
-def build_journal(codes_group, server_response, fetched_url, fetched_date):
+def build_journal(name, codes_group, server_response, fetched_url, fetched_date):
     '''Función para crear un JSON que registra los errores al hacer fetch al API'''
     script_dir = os.path.dirname(os.path.abspath(__file__))
     api_dir = os.path.dirname(script_dir)
-    error_journal_dir = os.path.join(api_dir, 'error_journal', 'errors.json')
+    error_journal_dir = os.path.join(api_dir, 'error_journal', f'{name}.json')
 
     os.makedirs(os.path.dirname(error_journal_dir), exist_ok=True)
 
@@ -276,10 +276,22 @@ def update_timestamp(stations_data, station_code, date_key):
     now = datetime.now(timezone.utc).isoformat()
     stations_data[station_code]['date'][date_key]['ts_update'] = now
 
-def build_url(encoded_init_date:str, encoded_end_date:str, stations_codes:str):
-    '''Función para construir la url de los'''
-    weather_values_url = (
-            f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/'
-            f'fechaini/{encoded_init_date}/fechafin/{encoded_end_date}/estacion/{stations_codes}'
-        )
-    return(weather_values_url)
+def build_url(
+        encoded_init_date:str = None, 
+        encoded_end_date:str = None, 
+        stations_codes:str = None, 
+        town_code:str = None):
+    '''Función para construir la url de los endpoints'''
+    weather_values_url = ""
+
+    if encoded_init_date != None and encoded_end_date != None and stations_codes != None:
+        weather_values_url = (
+                f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/'
+                f'fechaini/{encoded_init_date}/fechafin/{encoded_end_date}/estacion/{stations_codes}'
+            )
+        return(weather_values_url)
+    elif town_code != None:
+        weather_values_url = (
+                f'https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/{town_code}'
+            )
+        return(weather_values_url)

@@ -14,6 +14,7 @@ progress.json
 weather_data.json
 errors.json
 error_data.json
+error_prediction.json
 
 # Archivos txt
 *clean.txt
