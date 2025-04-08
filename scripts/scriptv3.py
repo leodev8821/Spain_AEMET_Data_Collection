@@ -132,107 +132,64 @@ def historical_data(final_date):
         logger.error(f"Error inesperado ScriptV3: {str(e)}", exc_info=True)
 
 def data_from_error_journal():
+    '''Función para actualizar el weather_data.json con la información desde errors.json'''
     try:
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
-        
         weather_data_path = os.path.join(api_dir, 'json', 'weather_data.json')
         output_file_path = os.path.join(api_dir, 'json', 'error_data.json')
+        
+        # Cargar el JSON principal
         weather_data = verify_json_docs(weather_data_path, message="No esta creado weather_data.json")
         now = datetime.now(timezone.utc).isoformat()
 
-        # Obtener datos de la estación (solo fechas faltantes)
-        result = fetch_error_data(
-            last_request_time=now
-        )
-
+        # Obtener datos del journal de errores
+        result = fetch_error_data(last_request_time=now)
+        
         if not result:
-            logger.error(f"No se obtuvieron datos válidos")
-            raise ValueError(f"No se obtuvieron datos válidos")
+            logger.error("No se obtuvieron datos válidos")
+            raise ValueError("No se obtuvieron datos válidos")
+
+        new_dates_for_group = set()
+
+        # Procesar cada entrada del journal de errores
+        for entry in result:
+            town_code = entry.get("town_code")
+            if not town_code:
+                continue
+                
+            # Obtener las fechas/datos del entry actual
+            date_data = entry.get("date", {})
+            if not date_data:
+                continue
+                
+            # Si el town_code no existe en weather_data, crearlo
+            if town_code not in weather_data:
+                weather_data[town_code] = {
+                    "town_code": town_code,
+                    "province": entry.get("province", ""),
+                    "town": entry.get("town", ""),
+                    "date": {}
+                }
+                
+            # Para cada fecha en el entry actual
+            for date_str, values in date_data.items():
+                # Si la fecha ya existe, actualizamos los valores
+                # Si no existe, la añadimos
+                weather_data[town_code]["date"][date_str] = {
+                    "values": values,
+                    "ts_insert": now,
+                    "ts_update": now
+                }
+                new_dates_for_group.add(date_str)
+
+        # Guardar los cambios en el archivo weather_data.json
+        with open(weather_data_path, 'w', encoding='utf-8') as f:
+            json.dump(weather_data, f, ensure_ascii=False, indent=4)
+
+        logger.info(f"Datos actualizados correctamente. Nuevas fechas añadidas: {new_dates_for_group}")
         
-        new_dates_for_group  = set()
-        for i in range(len(result)):
-            town_code = result[i].get("town_code")
-            date = result[i].get("date")
-
-            all_data_code = weather_data.get(town_code)
-
-            new_data = {}
-            if all_data_code:
-                if date not in all_data_code.get('date'):
-
-                    for date, values in result['date'].items():
-                        new_data[date] = {
-                            'values': values,
-                            'ts_insert': now,
-                            'ts_update': now
-                        }
-
-                        new_dates_for_group.add(date)
-                    all_data_code[current_station_code] = {
-                        "town_code": current_station_code,
-                        "province": station_data["province"],
-                        "town": station_data["town"],
-                        "date": {}
-                    }
-
-
-                    print("--------- weather -------------")
-                    print(date)
-                    print("--------- end weather -------------")
-
-        
-        # with open(output_file_path, 'w', encoding='utf-8') as f:
-        #         json.dump(result, f, ensure_ascii=False, indent=4)
-        
-
-        # # Iterar sobre cada estación en result
-        # new_dates_for_group  = set()
-        # for station_data in result: 
-        #     current_station_code = station_data.get('town_code')
-        #     logger.info(f"Procesando estación: [{current_station_code}]")
-
-        #     # Filtrar solo las fechas que no hemos procesado
-        #     new_data = {}
-        #     for date, values in station_data['date'].items():
-        #         if date not in processed_dates[stations_codes]:
-        #             new_data[date] = {
-        #                 'values': values,
-        #                 'ts_insert': now,
-        #                 'ts_update': now
-        #             }
-
-        #             new_dates_for_group.add(date)
-
-        #     # Si no hay información nueva para la estación, sigue con la siguiente
-        #     if not new_data:
-        #         logger.info(f"No hay datos nuevos para {current_station_code}")
-        #         continue
-
-        #     # Actualizar los datos de la estación
-        #     if current_station_code not in stations_data:
-        #         stations_data[current_station_code] = {
-        #             "town_code": current_station_code,
-        #             "province": station_data["province"],
-        #             "town": station_data["town"],
-        #             "date": {}
-        #         }
-            
-        #     # Agregar solo datos nuevos
-        #     stations_data[current_station_code]['date'].update(new_data)
-            
-        #     # Actualizar fechas procesadas
-        # processed_dates[current_station_code].update(new_dates_for_group)
-
-        # # Guardar progreso cada grupo de estaciones o al final
-        # if i % 1 == 0 or i == total_stations:
-        #     logger.info(f"[{i}] grupo de estaciones guardado en progress")
-        #     save_progress(progress_file_path, processed_dates, stations_data)
-
-        # Una espera para la nueva fetch
-        time.sleep(REQUEST_DELAY)
-
     except KeyError as e:
         logger.error(f"Error de key {str(e)}")
     except ValueError as e:
