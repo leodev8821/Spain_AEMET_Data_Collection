@@ -13,6 +13,7 @@ codes_group.json
 progress.json
 weather_data.json
 errors.json
+error_data.json
 
 # Archivos txt
 *clean.txt
