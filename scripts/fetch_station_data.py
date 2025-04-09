@@ -359,44 +359,43 @@ def fetch_error_data(last_request_time=None):
 
 @api_retry
 def fetch_prediction_station_data(
-    towns_codes,
+    towns_code,
     last_request_time=None
 ):
-    '''Función que obtiene los datos de cada estación y los alamacena en un JSON'''
-    
+    '''Función que obtiene los datos de cada municipio y devuelve una diccionario con toda la información'''
     data = None
     data_url = None
+    fetched_date = datetime.now(timezone.utc).isoformat()
+
+    # Verifico que existe AEMET_API_KEY
+    api_key = os.getenv("AEMET_API_KEY")
+    if not api_key:
+        logger.error("API key no configurada")
+        return None
+    
+    # Control de tasa global (1 petición por segundo como mínimo)
+    if last_request_time:
+        last_request_time = datetime.fromisoformat(last_request_time)
+        elapsed_time = datetime.now(timezone.utc) - last_request_time
+        if elapsed_time < timedelta(seconds=1):
+            time.sleep(1 - elapsed_time.total_seconds())
 
     # Función interna para manejar los reintentos
     def _fetch_with_retry(url, headers=None):
         return api_request(url, headers=headers)
 
     try:
-        # Control de tasa global (1 petición por segundo como mínimo)
-        if last_request_time:
-            last_request_time = datetime.fromisoformat(last_request_time)
-            elapsed_time = datetime.now(timezone.utc) - last_request_time
-            if elapsed_time < timedelta(seconds=1):
-                time.sleep(1 - elapsed_time.total_seconds())
-        
         # Construir URL y headers
-        weather_values_url = build_url(town_code=towns_codes)
-        
-        # Verifico que existe AEMET_API_KEY
-        api_key = os.getenv("AEMET_API_KEY")
-        if not api_key:
-            logger.error("API key no configurada")
-            return None
-        
+        weather_values_url = build_url(town_code=towns_code)
+
         # Headers requeridos por la API
         headers = {
             'accept': 'application/json',
             'api_key': api_key,
             'cache-control': 'no-cache'
         }
-        
+
         # Primera petición para obtener URL de los datos
-        logger.info(f"Obteniendo datos del grupo...")
         response = _fetch_with_retry(weather_values_url, headers=headers)
 
         # Si response es una excepción (RateLimitException, RequestException, etc.)
@@ -416,43 +415,41 @@ def fetch_prediction_station_data(
             data = _fetch_with_retry(data_url)
 
             if not data or not isinstance(data, list) or len(data) == 0:
-                fetched_date = datetime.now(timezone.utc).isoformat()
                 #build_journal(name="errors", codes_group=towns_codes, server_response=data, fetched_url=data_url,fetched_date=fetched_date)
                 return None
             
-            towns = []
-            # Procesar datos en el formato específico
+            # Construcción de la estructura del json
             station_info = {
+                "fetched": fetched_date,
                 "id": data[0].get("id", "no_data"),
                 "town": data[0].get('nombre', 'no_data'),
                 "province": data[0].get('provincia', 'no_data'),
+                "elaborated": data[0].get('elaborado', 'no_data'),
                 "prediction": {}
             }
 
             day = data[0]['prediccion']['dia']
             for i in range(len(day)):
                 key = f"day_{i+1}"
-                station_info["prediction"][key] = {
-                    day[i].get('fecha', 'no_data'):{
-                        "ProbPreci":day[i].get("probPrecipitacion", "no_data")
-                    }
+                fecha = day[i].get('fecha', 'no_data')
+
+                weather_data = {
+                    "probPrecipitacion": day[i].get('probPrecipitacion', []),
+                    "cotaNieveProv": day[i].get('cotaNieveProv', []),
+                    "estadoCielo": day[i].get('estadoCielo', []),
+                    "viento": day[i].get('viento', []),
+                    "rachaMax": day[i].get('rachaMax', []),
+                    "temperatura": day[i].get('temperatura', {}),
+                    "sensTermica": day[i].get('sensTermica', {}),
+                    "humedadRelativa": day[i].get('humedadRelativa', {}),
+                    "uvMax": day[i].get('uvMax', 'no_data'),
                 }
 
-                # for i in range(len(day[i]).get("probPrecipitacion", "no_data")):
-                #     probPrecip = {
-                #         "value": data[0]["prediccion"]['dia']['probPrecipitacion'][i].get("value"),
-                #         "periodo": data[0]["prediccion"]['dia']['probPrecipitacion'][i].get("periodo")
-                #     }
-                towns.append(station_info["prediction"])
-            
-                print(towns)
-
-
-
-            
-            # towns.append(station_info)
-            # logger.info(f"Información del grupo extraída correctamente")
-            # return towns
+                station_info["prediction"][key] = {
+                    fecha: weather_data
+                }
+        
+            return station_info
         else:
             error_msg = response.get('descripcion', 'Error desconocido')
             logger.error(f"Error en la API: {error_msg}")
@@ -463,7 +460,7 @@ def fetch_prediction_station_data(
         fetched_date = datetime.now(timezone.utc).isoformat()
         build_journal(
             name="error_prediction",
-            codes_group=towns_codes, 
+            codes_group=towns_code, 
             server_response=str(e), 
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date)
@@ -474,11 +471,9 @@ def fetch_prediction_station_data(
         fetched_date = datetime.now(timezone.utc).isoformat()
         build_journal(
             name="error_prediction",
-            codes_group=towns_codes, 
+            codes_group=towns_code, 
             server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date
         )
         return None
-    
-fetch_prediction_station_data("28014")

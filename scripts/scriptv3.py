@@ -206,99 +206,52 @@ def prediction_data_by_town():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
         
-        towns_codes_file_path = os.path.join(api_dir, 'json', 'towns_codes.json')
-        output_file_path = os.path.join(api_dir, 'json', 'weather_data.json')
+        prediction_progress_file_path = os.path.join(api_dir, 'json', 'prediction_progress.json')
+        output_file_path = os.path.join(api_dir, 'json', 'prediction_weather_data.json')
         now = datetime.now(timezone.utc).isoformat()
 
-        # 2. Leer los códigos de las estaciones desde JSON
-        logger.info("Obteniendo códigos de estaciones EMA")
-        json_path = os.path.join(api_dir, 'json', 'codes_group.json')
-        ema_codes = verify_json_docs(json_path_dir=json_path, message="Debes crear primero el archivo de códigos EMA - Opción 1")
-        
-        # 3. Cargar progreso previo
-        processed_dates, stations_data = load_progress(progress_file_path)
+        all_towns_data = set()
 
-        # 4. Configurar rango de fechas
-        encoded_init_date = DEFAULT_START_DATE.replace(':', '%3A')
-        end_date_str = final_date + 'T00:00:00UTC'
-        encoded_end_date = end_date_str.replace(':', '%3A')
+        # 2. Leer los códigos de las estaciones desde JSON
+        logger.info("Obteniendo códigos de municipios")
+        towns_codes_file_path = os.path.join(api_dir, 'json', 'towns_codes.json')
+        towns_codes = verify_json_docs(json_path_dir=towns_codes_file_path, message="Debes crear primero el archivo de códigos de municipios")
 
         # 5. Procesar estaciones
-        total_stations = len(ema_codes)
+        total_towns = len(towns_codes)
 
-        for i, (group, stations_codes) in enumerate(ema_codes.items(), 1):
-            encoded_stations_codes = stations_codes.replace(',', '%2C')
-            logger.info(f"[{i}/{total_stations}] Procesando estaciónes del {group}")
+        for i, (code, name) in enumerate(towns_codes.items(), 1):
+            logger.info(f"[{i}/{total_towns}] Procesando el municipio {name}")
 
-            if stations_codes not in processed_dates:
-                processed_dates[stations_codes] = set()
-
-            # Obtener datos de la estación (solo fechas faltantes)
-            result = fetch_historical_station_data(
-                encoded_init_date,
-                encoded_end_date,
-                encoded_stations_codes,
+            # Obtener datos de cada municipio
+            town_data = fetch_prediction_station_data(
+                code,
                 last_request_time=now
             )
 
             # Si no hay información de esa estación, continúa con la siguiente
-            if not result:
-                logger.warning(f"No se obtuvieron datos para el {group}")
+            if not town_data:
+                logger.warning(f"No se obtuvieron datos para el {code}")
                 continue
 
-            # Iterar sobre cada estación en result
-            new_dates_for_group  = set()
-            for station_data in result: 
-                current_station_code = station_data.get('town_code')
-                logger.info(f"Procesando estación: [{current_station_code}]")
-
-                # Filtrar solo las fechas que no hemos procesado
-                new_data = {}
-                for date, values in station_data['date'].items():
-                    if date not in processed_dates[stations_codes]:
-                        new_data[date] = {
-                            'values': values,
-                            'ts_insert': now,
-                            'ts_update': now
-                        }
-
-                        new_dates_for_group.add(date)
-
-                # Si no hay información nueva para la estación, sigue con la siguiente
-                if not new_data:
-                    logger.info(f"No hay datos nuevos para {current_station_code}")
-                    continue
-
-                # Actualizar los datos de la estación
-                if current_station_code not in stations_data:
-                    stations_data[current_station_code] = {
-                        "town_code": current_station_code,
-                        "province": station_data["province"],
-                        "town": station_data["town"],
-                        "date": {}
-                    }
-                
-                # Agregar solo datos nuevos
-                stations_data[current_station_code]['date'].update(new_data)
-                
-                # Actualizar fechas procesadas
-            processed_dates[current_station_code].update(new_dates_for_group)
+            all_towns_data.add(town_data)
 
             # Guardar progreso cada grupo de estaciones o al final
-            if i % 1 == 0 or i == total_stations:
-                logger.info(f"[{i}] grupo de estaciones guardado en progress")
-                save_progress(progress_file_path, processed_dates, stations_data)
+            if i % 1 == 0 or i == total_towns:
+                logger.info(f"[{i}] municipio(s) guardado en prediction_progress")
+                with open(prediction_progress_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(all_towns_data, f, ensure_ascii=False, indent=4)
 
             # Una espera para la nueva fetch
             time.sleep(REQUEST_DELAY)
 
         # 6. Guardar resultados finales
-        if stations_data:
+        if all_towns_data:
             with open(output_file_path, 'w', encoding='utf-8') as f:
-                json.dump(stations_data, f, ensure_ascii=False, indent=4)
-            os.remove(progress_file_path)
+                json.dump(all_towns_data, f, ensure_ascii=False, indent=4)
+            #os.remove(prediction_progress_file_path)
             logger.info(f"Datos guardados en {output_file_path}")
-            return stations_data
+            return all_towns_data
         
         logger.warning("No se obtuvieron datos válidos")
         return None
