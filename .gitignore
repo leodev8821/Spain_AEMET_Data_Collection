@@ -17,6 +17,7 @@ error_data.json
 error_prediction.json
 pp.json
 prediccion.json
+prediction_progress.json
 
 # Archivos txt
 *clean.txt

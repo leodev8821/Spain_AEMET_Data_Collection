@@ -1,14 +1,12 @@
-from .scriptv3 import historical_data, data_from_error_journal
-from .utils import obtain_and_group_stations_codes, date_validation, data_to_csv, build_journal, save_progress, load_progress, update_timestamp, re_fetch_errors_journal
+from .scriptv3 import historical_data, data_from_error_journal, prediction_data_by_town, prediction_data_by_town
+from .utils import obtain_and_group_stations_codes, data_to_csv, date_validation
 
 __all__ = [
     'historical_data',
-    'save_progress',
-    'load_progress',
+    'data_from_error_journal',
+    'prediction_data_by_town',
+    'prediction_data_by_town',
     'obtain_and_group_stations_codes',
     'data_to_csv',
-    'date_validation',
-    'build_journal',
-    'update_timestamp',
-    're_fetch_errors_journal'
+    'date_validation'
     ]

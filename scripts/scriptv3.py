@@ -210,7 +210,7 @@ def prediction_data_by_town():
         output_file_path = os.path.join(api_dir, 'json', 'prediction_weather_data.json')
         now = datetime.now(timezone.utc).isoformat()
 
-        all_towns_data = set()
+        all_towns_data = []
 
         # 2. Leer los códigos de las estaciones desde JSON
         logger.info("Obteniendo códigos de municipios")
@@ -234,7 +234,7 @@ def prediction_data_by_town():
                 logger.warning(f"No se obtuvieron datos para el {code}")
                 continue
 
-            all_towns_data.add(town_data)
+            all_towns_data.append(town_data)
 
             # Guardar progreso cada grupo de estaciones o al final
             if i % 1 == 0 or i == total_towns:
