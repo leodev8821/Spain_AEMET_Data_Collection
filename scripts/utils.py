@@ -109,7 +109,7 @@ def re_fetch_errors_journal():
         logger.error(f"Error al cargar errors.json {str(e)}")
 
 
-def data_to_csv(name: str):
+def historical_data_to_csv(name: str):
     '''Función para guardar la información en un archivo CSV'''
     match name:
         case "precipitaciones":
@@ -295,3 +295,88 @@ def build_url(
                 f'https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/{town_code}'
             )
         return(weather_values_url)
+    
+def format_historical_weather_data(station_data):
+    return {
+        "avg_t": station_data.get('tmed', 'no_data'),
+        "max_t": station_data.get('tmax', 'no_data'),
+        "min_t": station_data.get('tmin', 'no_data'),
+        "precip": station_data.get('prec', 'no_data'),
+        "avg_vel": station_data.get('velmedia', 'no_data'),
+        "max_vel": station_data.get('racha', 'no_data'),
+        "avg_rel_hum": station_data.get('hrMedia', 'no_data'),
+        "max_rel_hum": station_data.get('hrMax', 'no_data'),
+        "min_rel_hum": station_data.get('hrMin', 'no_data'),
+                
+    }
+
+def format_prediction_weather_data(day_data):
+    return {
+        "probPrecipitacion": day_data.get('probPrecipitacion', []),
+        "cotaNieveProv": day_data.get('cotaNieveProv', []),
+        "estadoCielo": day_data.get('estadoCielo', []),
+        "viento": day_data.get('viento', []),
+        "rachaMax": day_data.get('rachaMax', []),
+        "temperatura": day_data.get('temperatura', {}),
+        "sensTermica": day_data.get('sensTermica', {}),
+        "humedadRelativa": day_data.get('humedadRelativa', {}),
+        "uvMax": day_data.get('uvMax', 'no_data'),
+    }
+
+def precipitations_to_csv():
+    try:
+        # Configuración de directorios
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        api_dir = os.path.dirname(script_dir)
+        precip_csv_dir = os.path.join(api_dir, 'csv')
+        prediction_weather_dir = os.path.join(api_dir, 'json', 'prediction_progress.json')
+        
+        os.makedirs(precip_csv_dir, exist_ok=True)
+
+        # Cargar los datos
+        with open(prediction_weather_dir, 'r', encoding='utf-8') as f:
+            prediction_weather_data = json.load(f)
+
+        # Preparar los datos para el CSV
+        processed_data = []
+        
+        for entry in prediction_weather_data:
+            row = {
+                'id': entry['id'],
+                'town': entry['town'],
+                'province': entry['province'],
+                'fetched_date': entry['fetched'][:10]
+            }
+            
+            # Procesar las predicciones para cada día
+            for day in ['day_1', 'day_2','day_3', 'day_4','day_5', 'day_6', 'day_7']:
+                if day in entry['prediction']:
+                    # Obtener la fecha del día (primera clave en el diccionario day_X)
+                    day_date = next(iter(entry['prediction'][day].keys()))[:10]
+                    row[f'{day}_date'] = day_date
+                    
+                    # Obtener todos los valores de probPrecipitacion en orden
+                    prob_values = entry['prediction'][day][next(iter(entry['prediction'][day].keys()))]['probPrecipitacion']
+                    for i, prob in enumerate(prob_values, start=1):
+                        row[f'{day}_value{i}'] = prob['value']
+            
+            processed_data.append(row)
+
+        # Convertir a DataFrame de Pandas
+        df = pd.DataFrame(processed_data)
+
+        # Ordenar columnas (opcional, para mantener el mismo orden que en tu versión)
+        columns = ['id', 'town', 'province', 'fetched_date']
+        for day in ['day_1', 'day_2','day_3', 'day_4','day_5', 'day_6', 'day_7']:
+            columns.append(f'{day}_date')
+            columns.extend([f'{day}_value{i}' for i in range(1, 8)])
+        
+        df = df[columns]  # Reordenar columnas
+
+        # Guardar como CSV
+        csv_path = os.path.join(precip_csv_dir, 'precipitations_prediction.csv')
+        df.to_csv(csv_path, index=False, encoding='utf-8')
+        
+    except Exception as e:
+        print(f"Error al procesar los datos: {str(e)}")
+        return None

@@ -47,25 +47,25 @@ def main():
             # Crea un archivo con los datos de las temperatura en /csv/temperatura.csv
             print("3. Crear temperatura.csv")
             logger.info("Creando temperatura.csv...")
-            data_to_csv('temperatura')
+            historical_data_to_csv('temperatura')
                     
         case "4":
             # Crea un archivo con los datos de las precipitaciones en /csv/precipitaciones.csv
             print("4. Crear precipitaciones.csv")
             logger.info("Creando precipitaciones.csv...")
-            data_to_csv('precipitaciones')
+            historical_data_to_csv('precipitaciones')
         
         case "5":
             # Crea un archivo con los datos de las racha media en /csv/viento.csv
             print("5. Crear viento.csv")
             logger.info("Creando viento.csv...")
-            data_to_csv('viento')
+            historical_data_to_csv('viento')
         
         case "6":
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
             print("6. Crear humedad_relativa.csv")
             logger.info("Creando humedad_relativa.csv...")
-            data_to_csv('humedad_relativa')
+            historical_data_to_csv('humedad_relativa')
         
         case "7":
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
