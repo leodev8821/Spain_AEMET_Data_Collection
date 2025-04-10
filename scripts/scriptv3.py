@@ -222,11 +222,11 @@ def prediction_data_by_town(resume=False):
         
         towns_codes = verify_json_docs(
             json_path_dir=town_codes_path,
-            message="No existen códigos pendientes" if resume else "Debes crear primero el archivo de códigos"
+            message="❗ No existen códigos pendientes" if resume else "Debes crear primero el archivo de códigos"
         )
 
         if not towns_codes:
-            logger.warning("No hay municipios para procesar")
+            logger.warning("❗ No hay municipios para procesar")
             return
 
         # 4. Procesar municipios
@@ -238,16 +238,16 @@ def prediction_data_by_town(resume=False):
             
             # En modo resume, saltar si ya existe
             if resume and town_id in existing_data_dict:
-                logger.info(f"[{i}/{total_towns}] Municipio {name} ya existe. Saltando...")
+                logger.info(f"↩️ [{i}/{total_towns}] Municipio {name} ya existe. Saltando...")
                 continue
 
-            logger.info(f"[{i}/{total_towns}] Procesando el municipio {name}")
+            logger.info(f"🌐 [{i}/{total_towns}] Procesando el municipio {name}")
 
             # Obtener datos del municipio
             town_data = fetch_prediction_station_data(code, last_request_time=now)
 
             if not town_data:
-                logger.warning(f"No se obtuvieron datos para el municipio {code}")
+                logger.warning(f"❗ No se obtuvieron datos para el municipio {code}")
                 continue
 
             if town_data:
@@ -261,16 +261,16 @@ def prediction_data_by_town(resume=False):
                 with open(prediction_data_file_path, 'w', encoding='utf-8') as f:
                     json.dump(list(existing_data_dict.values()), f, ensure_ascii=False, indent=4)
             else:
-                logger.warning(f"No se obtuvieron datos para {name}")
+                logger.warning(f"❗ No se obtuvieron datos para {name}")
 
             time.sleep(REQUEST_DELAY)
 
-        logger.info(f"Proceso completado. Municipios procesados: {processed_count}/{total_towns}")
+        logger.info(f"✅ Proceso completado. Municipios procesados: {processed_count}/{total_towns}")
         return list(existing_data_dict.values())
         
     except KeyError as e:
-        logger.error(f"Error de clave: {str(e)}")
+        logger.error(f"❌ Error de clave: {str(e)}")
     except (ValueError, json.JSONDecodeError) as e:
-        logger.error(f"Error al procesar JSON: {str(e)}")
+        logger.error(f"❌ Error al procesar JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+        logger.error(f"❌ Error inesperado: {str(e)}", exc_info=True)

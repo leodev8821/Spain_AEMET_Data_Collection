@@ -2,6 +2,7 @@ import os
 import socket
 import time
 from datetime import datetime, timedelta, timezone
+from xmlrpc.client import ProtocolError
 import requests
 from http.client import RemoteDisconnected
 from dotenv import load_dotenv
@@ -15,10 +16,12 @@ from tenacity import (
     retry,
     retry_if_exception,
     stop_after_attempt,
+    wait_combine,
     wait_exponential,
     retry_if_exception_type,
     RetryError,
-    before_sleep_log
+    before_sleep_log,
+    wait_random
 )
 
 # Configurar logging
@@ -53,8 +56,11 @@ def is_rate_limit_error(response):
     
 # Decorador de tenacity para manejar los RateLimit y reintentar
 api_retry = retry(
-    stop=stop_after_attempt(4),
-    wait=wait_exponential(multiplier=1, min=10, max=120),
+    stop=stop_after_attempt(5),  # Aumenta a 5 intentos
+    wait=wait_combine(
+        wait_exponential(multiplier=1, min=4, max=60),
+        wait_random(min=1, max=3)
+    ),
     retry=(
         retry_if_exception(lambda e: isinstance(e, RateLimitException)) |
         retry_if_exception_type(ConnectionError) |
@@ -62,14 +68,15 @@ api_retry = retry(
         retry_if_exception_type(RemoteDisconnected) |
         retry_if_exception_type(RequestException) |
         retry_if_exception_type(HTTPError) |
-        retry_if_exception_type(socket.gaierror) 
+        retry_if_exception_type(socket.gaierror) |
+        retry_if_exception_type(ProtocolError)  # Añade ProtocolError
     ),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True
 )
 
 @api_retry
-def api_request(url, headers=None, timeout=30):
+def api_request(url, headers=None, timeout=(3.05, 27)):
     """Realiza peticiones HTTP con manejo de errores y rate limiting."""
     try:
         response = requests.get(url, headers=headers, timeout=timeout)
@@ -105,8 +112,8 @@ def fetch_historical_station_data(
         if last_request_time:
             last_request_time = datetime.fromisoformat(last_request_time)
             elapsed_time = datetime.now(timezone.utc) - last_request_time
-            if elapsed_time < timedelta(seconds=1):
-                time.sleep(1 - elapsed_time.total_seconds())
+            if elapsed_time < timedelta(seconds=1.5):
+                time.sleep(1.5 - elapsed_time.total_seconds())
         
         # Construir URL y headers
         weather_values_url = build_url(encoded_init_date,encoded_end_date,station_code)
@@ -225,8 +232,8 @@ def fetch_error_data(last_request_time=None):
         if last_request_time:
             last_request_time = datetime.fromisoformat(last_request_time)
             elapsed_time = datetime.now(timezone.utc) - last_request_time
-            if elapsed_time < timedelta(seconds=1):
-                sleep_time = 1 - elapsed_time.total_seconds()
+            if elapsed_time < timedelta(seconds=1.5):
+                sleep_time = 1.5 - elapsed_time.total_seconds()
                 time.sleep(sleep_time)
 
         # Verificar que la API_KEY este configurada
@@ -348,8 +355,8 @@ def fetch_prediction_station_data(town_code, last_request_time=None):
         try:
             last_request_time = datetime.fromisoformat(last_request_time)
             elapsed_time = datetime.now(timezone.utc) - last_request_time
-            if elapsed_time < timedelta(seconds=1):
-                time.sleep(1 - elapsed_time.total_seconds())
+            if elapsed_time < timedelta(seconds=1.5):
+                time.sleep(1.5 - elapsed_time.total_seconds())
         except ValueError as e:
             logger.warning(f"Formato de fecha inválido: {last_request_time} - {str(e)}")
 
