@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timezone
 from collections import defaultdict
 from .utils import *
+from .verify_files import *
 from .fetch_station_data import *
 import logging
 import time

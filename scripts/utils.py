@@ -5,9 +5,7 @@ import os
 from datetime import datetime
 import re
 from dotenv import load_dotenv
-import pandas as pd
-from collections import defaultdict
-from .csv_convert import *
+from .verify_files import *
 
 # Configurar logging
 logging.basicConfig(
@@ -83,15 +81,6 @@ def date_validation(date_str: str):
     
     except ValueError:
         return False, "Fecha inválida. Por favor, ingrese una fecha correcta."
-    
-def verify_json_docs(json_path_dir:str, message: str):
-    '''Función para verificar la existencia de un archivo JSON'''
-    if os.path.exists(json_path_dir):
-        with open(json_path_dir, 'r', encoding='utf-8') as f:
-            json_info = json.load(f)
-            return json_info
-    else: 
-        raise ValueError(message)
     
 def re_fetch_errors_journal():
     '''Función para obtener los url de error_journal/errors.json'''
