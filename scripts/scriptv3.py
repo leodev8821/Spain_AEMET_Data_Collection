@@ -209,7 +209,15 @@ def prediction_data_by_town(resume=False):
         output_file_path = os.path.join(api_dir, 'json', 'prediction_weather_data.json')
         now = datetime.now(timezone.utc).isoformat()
 
-        all_towns_data = []
+        # Cargar datos existentes si el archivo existe
+        if os.path.exists(prediction_progress_file_path):
+            with open(prediction_progress_file_path, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+            # Convertir a diccionario con id como clave para fácil acceso
+            existing_data_dict = {str(town['id']): town for town in existing_data}
+        else:
+            existing_data_dict = {}
+            existing_data = []
 
         # 2. Determinar el conjunto de municipios a procesar
         if resume:
@@ -231,44 +239,65 @@ def prediction_data_by_town(resume=False):
             logger.warning("No hay municipios para procesar")
             return
 
-        # 3. Procesar estaciones
+        # 3. Procesar municipios
         total_towns = len(towns_codes)
+        processed_towns = []
+        new_data_added = False
 
         for i, (code, name) in enumerate(towns_codes.items(), 1):
             logger.info(f"[{i}/{total_towns}] Procesando el municipio {name}")
 
-            # Obtener datos de cada municipio
+            # Verificar si ya existe y si debemos actualizarlo
+            town_id = str(code)  # Usamos el código como ID
+            if town_id in existing_data_dict and resume:
+                logger.info(f"El municipio {name} ya existe en los datos. Saltando...")
+                continue
+
+            # Obtener datos del municipio
             town_data = fetch_prediction_station_data(
                 code,
                 last_request_time=now
             )
 
-            # Si no hay información de esa estación, continúa con la siguiente
             if not town_data:
-                logger.warning(f"No se obtuvieron datos para el {code}")
+                logger.warning(f"No se obtuvieron datos para el municipio {code}")
                 continue
 
-            all_towns_data.append(town_data)
+            # Añadir timestamps
+            town_data['ts_insert'] = now
+            town_data['ts_update'] = now
 
-            # Guardar progreso cada grupo de estaciones o al final
+            # Actualizar o añadir el registro
+            if town_id in existing_data_dict:
+                # Mantener ts_insert original y actualizar ts_update
+                town_data['ts_insert'] = existing_data_dict[town_id]['ts_insert']
+                existing_data_dict[town_id] = town_data
+                logger.info(f"Datos actualizados para el municipio {name}")
+            else:
+                existing_data_dict[town_id] = town_data
+                logger.info(f"Nuevos datos añadidos para el municipio {name}")
+                new_data_added = True
+
+            processed_towns.append(town_data)
+
+            # Guardar progreso
             if i % 1 == 0 or i == total_towns:
-                logger.info(f"[{i}] municipio(s) guardado en prediction_progress")
+                logger.info(f"[{i}] municipio(s) procesado(s)")
                 with open(prediction_progress_file_path, 'w', encoding='utf-8') as f:
-                    json.dump(all_towns_data, f, ensure_ascii=False, indent=4)
+                    json.dump(processed_towns, f, ensure_ascii=False, indent=4)
 
-            # Una espera para la nueva fetch
             time.sleep(REQUEST_DELAY)
 
-        # 4. Guardar resultados finales
-        if all_towns_data:
+        # 4. Guardar resultados finales solo si hay datos nuevos
+        if new_data_added or not resume:
+            final_data = list(existing_data_dict.values())
             with open(output_file_path, 'w', encoding='utf-8') as f:
-                json.dump(all_towns_data, f, ensure_ascii=False, indent=4)
-            #os.remove(prediction_progress_file_path)
+                json.dump(final_data, f, ensure_ascii=False, indent=4)
             logger.info(f"Datos guardados en {output_file_path}")
-            return all_towns_data
-        
-        logger.warning("No se obtuvieron datos válidos")
-        return None
+            return final_data
+        else:
+            logger.info("No se añadieron nuevos datos. Archivo no modificado.")
+            return existing_data
         
     except KeyError as e:
         logger.error(f"Error de key {str(e)}")
@@ -277,4 +306,4 @@ def prediction_data_by_town(resume=False):
     except json.JSONDecodeError as e:
         logger.error(f"Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado ScriptV3: {str(e)}", exc_info=True)
+        logger.error(f"Error inesperado en prediction_data_by_town: {str(e)}", exc_info=True)
