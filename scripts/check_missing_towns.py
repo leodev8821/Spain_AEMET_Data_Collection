@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def check_missing_town_codes():
     """
-    Comprar los codigos de los pueblos entre towns_codes.json y prediction_progress.json y genera una lista de los codigos de pueblos pendientes
+    Comprar los codigos de los pueblos entre towns_codes.json y prediction_data.json y genera una lista de los codigos de pueblos pendientes
     """
     try:
         # configuramos la ubicacion del archivo
@@ -20,7 +20,7 @@ def check_missing_town_codes():
         json_dir = os.path.join(api_dir, 'json')
         
         towns_codes_path = os.path.join(json_dir, 'towns_codes.json')
-        prediction_progress_path = os.path.join(json_dir, 'prediction_progress.json')
+        prediction_data_path = os.path.join(json_dir, 'prediction_data.json')
         output_path = os.path.join(json_dir, 'pending_towns_codes.json')
 
         # cargamos towns_codes.json
@@ -28,16 +28,16 @@ def check_missing_town_codes():
             towns_codes = json.load(f)
         logger.info(f"Cargados {len(towns_codes)} los codigos de pueblos de towns_codes.json")
         
-        # Cargamos prediction_progress.json
-        with open(prediction_progress_path, 'r', encoding='utf-8') as f:
-            prediction_progress = json.load(f)
-        logger.info(f"Cargados {len(prediction_progress)} los codigos de pueblos de prediction_progress.json")
+        # Cargamos prediction_data.json
+        with open(prediction_data_path, 'r', encoding='utf-8') as f:
+            prediction_data = json.load(f)
+        logger.info(f"Cargados {len(prediction_data)} los codigos de pueblos de prediction_data.json")
 
-        # Extraemos los IDS existentes de prediction_progress.json
-        existing_codes = [entry['id'] for entry in prediction_progress if 'id' in entry]
-        logger.info(f"encontrados {len(existing_codes)} los codigos de pueblos validos de prediction_progress.json")
+        # Extraemos los IDS existentes de prediction_data.json
+        existing_codes = [entry['id'] for entry in prediction_data if 'id' in entry]
+        logger.info(f"encontrados {len(existing_codes)} los codigos de pueblos validos de prediction_data.json")
         
-        # Generamos el diccionario de los codigos pendientes , que no se encuentran en prediction_progress.json
+        # Generamos el diccionario de los codigos pendientes , que no se encuentran en prediction_data.json
         pending_towns = {}
         for code, town in towns_codes.items():
             if int(code) not in existing_codes:
