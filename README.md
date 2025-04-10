@@ -37,91 +37,91 @@ python -m main
 
 Seleccionar las opciones del menú en la consola que son:
 
-**1. Obtener códigos de las estaciones**
+🔵 **1. Obtener códigos de las estaciones**
 
   Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET.
 
-**2. Obtener los datos históricoss**
+🔵 **2. Obtener los datos históricoss**
 
   Debes ingresar una fecha en formato **'YYY-MM-DD'** y realizará la consulta desde el 2025-01-01 hasta la fecha introducida (toma tiempo).
 
-**3. Crear archivos 'csv' históricos**
+🔵 **3. Crear archivos 'csv' históricos**
 
   * Esta opción abre otro prompt para ingresar otras opciones:
 
-    **1. Crear temperatura_historico.csv**.
+    🔸 **1. Crear temperatura_historico.csv**.
 
      Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
 
-    **2. Crear humedad_relativa_historico.csv**
+    🔸 **2. Crear humedad_relativa_historico.csv**
 
      Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
 
-    **3. Crear precipitaciones_historico.csv**
+    🔸 **3. Crear precipitaciones_historico.csv**
 
      Crea el archivo en ***~/csv/historical/precipitaciones_historico.csv***.
 
-    **4. Crear viento_historico.csv**
+    🔸 **4. Crear viento_historico.csv**
 
      Crea el archivo en ***~/csv/historical/viento_historico.csv***.
 
-    **0. Volver**
+    🔸 **0. Volver**
 
      Retorna al menú anterior.
 
-**4. Recuperar información histórica de los errores**
+🔵 **4. Recuperar información histórica de los errores**
 
   Actualiza la información de ***weather_data.json*** desde ***errors.json*** que son las estaciones que produjeron errores.
 
-**5. Obtener previsión de los próximos 7 dias de todos los municipios**
+🔵 **5. Obtener previsión de los próximos 7 dias de todos los municipios**
 
   Crea un archivo con la previsión de los próximos 7 días en ***~/json/prediction_progress.json***
 
-**6. Reanudar obtención de previsión de los próximos 7 dias**
+🔵 **6. Reanudar obtención de previsión de los próximos 7 dias**
 
   Reanuda y actualiza el archivo ***~/json/prediction_progress.json*** con la previsión de los próximos 7 días de los municipios restantes en ***~/json/pending_town_codes.json***
 
-**7. Crear archivos 'csv' de previsión**
+🔵 **7. Crear archivos 'csv' de previsión**
 
   * Esta opción abre otro prompt para ingresar otras opciones:
 
-    **1. Crear prediccion_precipitaciones.csv**.
+    🔸 **1. Crear prediccion_precipitaciones.csv**.
 
       Crea el archivo en ***~/csv/prediction/prediccion_precipitaciones.csv***.
 
-    **2. Crear prediccion_cota_nieve.csv**
+    🔸 **2. Crear prediccion_cota_nieve.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_cota_nieve.csv***.
 
-    **3. Crear prediccion_estado_cielo.csv**
+    🔸 **3. Crear prediccion_estado_cielo.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_estado_cielo.csv***.
 
-    **4. Crear prediccion_viento.csv**
+    🔸 **4. Crear prediccion_viento.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_viento.csv***.
     
-    **5. Crear prediccion_racha_max.csv**
+    🔸 **5. Crear prediccion_racha_max.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_racha_max.csv***.
 
-    **6. Crear prediccion_temperatura.csv**
+    🔸 **6. Crear prediccion_temperatura.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_temperatura.csv***.
 
-    **7. Crear prediccion_sens_termica.csv**
+    🔸 **7. Crear prediccion_sens_termica.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_sens_termica.csv***.
 
-    **8. Crear prediccion_humedad_relativa.csv**
+    🔸 **8. Crear prediccion_humedad_relativa.csv**
 
       Crea el archivo en ***~/csv/prediction/prediccion_humedad_relativa.csv***.
 
-    **0. Volver**
+    🔸 **0. Volver**
 
       Retorna al menú anterior.
 
-**0. Terminar la ejecución**
+🔵 **0. Terminar la ejecución**
 
   Finaliza la ejecución de la aplicación
 
