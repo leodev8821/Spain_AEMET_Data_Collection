@@ -5,33 +5,33 @@
 1. Obtener la API Key la [AEMET](https://opendata.aemet.es/centrodedescargas/altaUsuario) para poder usar la aplicación y almacenarla en el archivo ```.env``` con el nombre **AEMET_API_KEY**
 
 2. Crear el entorno virutal **.venv**
-  * ```python
-    python -m venv .venv
-    ```
+```python
+python -m venv .venv
+```
 
 3. Activar el entorno virtual recién creado
 - Windows
-  * ```
-    .venv\Scripts\activate
-    ```
+```
+.venv\Scripts\activate
+```
 
 - Linux/MacOS
-  * ```
-  source .venv/bin/activate
-  ```
+```
+source .venv/bin/activate
+```
 
 3. Instalar los paquetes necesarios incluidos en el **requirements.txt**:
 
-  * ```python
-  pip3 install -r requirements.txt
-  ```
+```python
+pip3 install -r requirements.txt
+```
 
 # <span style="color: blue">Ejecución</span>
 Ejecutar la aplicación mediante el comando
 
-  * ```python 
-  python -m main
-  ```
+```python 
+python -m main
+```
 
 # <span style="color: blue">Menú de la aplicación</span>
 
