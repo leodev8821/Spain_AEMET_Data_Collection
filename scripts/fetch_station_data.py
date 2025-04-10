@@ -427,7 +427,6 @@ def fetch_prediction_station_data(town_code, last_request_time=None):
         build_journal(
             name="error_prediction",
             codes_group=town_code,
-            server_status=response.status_code,
             server_response=str(e),
             fetched_url=data_url if 'data_url' in locals() else "URL no disponible",
             fetched_date=datetime.now(timezone.utc).isoformat()
@@ -439,7 +438,6 @@ def fetch_prediction_station_data(town_code, last_request_time=None):
         build_journal(
             name="error_prediction",
             codes_group=town_code,
-            server_status=response.status_code,
             server_response=str(e),
             fetched_url=data_url if 'data_url' in locals() else "URL no disponible",
             fetched_date=datetime.now(timezone.utc).isoformat()

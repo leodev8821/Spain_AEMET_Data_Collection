@@ -323,27 +323,43 @@ def format_prediction_weather_data(day_data):
         "uvMax": day_data.get('uvMax', 'no_data'),
     }
 
-def predictions_to_csv(name:str):
+def predictions_to_csv(name: str):
     match name:
         case "precipitaciones":
             key = "probPrecipitacion"
+            value = "value"
+            extra_fields = []
         case "cota_nieve":
             key = "cotaNieveProv"
+            value = "value"
+            extra_fields = []
         case "estado_cielo":
             key = "estadoCielo"
+            value = "value"
+            extra_fields = ["descripcion"]
         case "viento":
             key = "viento"
+            value = "velocidad"
+            extra_fields = ["direccion"]
         case "racha_max":
             key = "rachaMax"
+            value = "value"
+            extra_fields = []
         case "temperatura":
             key = "temperatura"
+            value = None
+            extra_fields = []
         case "sens_termica":
             key = "sensTermica"
+            value = None
+            extra_fields = []
         case "humedad_relativa":
             key = "humedadRelativa"
+            value = None
+            extra_fields = []
 
     try:
-        # Configuración de directorios
+        # Configuración de directorios (igual que antes)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
         precip_csv_dir = os.path.join(api_dir, 'csv')
@@ -373,30 +389,70 @@ def predictions_to_csv(name:str):
                     date_key = next(iter(day_data.keys()))  # Obtiene la primera clave (timestamp)
                     row[f'{day}_date'] = date_key[:10]  # Solo la fecha
                     
-                    # Manejar diferentes tipos de claves
-                    if isinstance(key, list):
-                        # Para casos como viento, temperatura, etc. que tienen múltiples métricas
-                        for metric in key:
-                            if metric in day_data[date_key]:
-                                values = day_data[date_key][metric]
-                                for i, val in enumerate(values, start=1):
-                                    row[f'{day}_{metric}_value{i}'] = val['value']
-                    else:
-                        # Para precipitaciones que tiene una sola métrica
-                        if key in day_data[date_key]:
-                            values = day_data[date_key][key]
-                            for i, val in enumerate(values, start=1):
-                                row[f'{day}_value{i}'] = val['value']
+                    if key in day_data[date_key]:
+                        metric_data = day_data[date_key][key]
+                        
+                        # Para métricas con estructura compleja (temperatura, sensTermica, humedadRelativa)
+                        if name in ['temperatura', 'sens_termica', 'humedad_relativa']:
+                            row[f'{day}_maxima'] = metric_data.get('maxima', 0)
+                            row[f'{day}_minima'] = metric_data.get('minima', 0)
+                            
+                            for dato in metric_data.get('dato', []):
+                                hora = dato.get('hora', '')
+                                val = dato.get('value', 0)
+                                row[f'{day}_hora{hora}'] = val
+                        
+                        # Para estado_cielo (con descripción)
+                        elif name == "estado_cielo":
+                            if isinstance(metric_data, list):
+                                for val in metric_data:
+                                    periodo = val.get('periodo', '').replace('-', '_')  # 00-24 -> 00_24
+                                    row_val = safe_get_value(val, 'value', "")
+                                    row_desc = val.get('descripcion', "")
+                                    
+                                    # Solo agregar si hay datos
+                                    if row_val != "" or row_desc != "":
+                                        row[f'{day}_{periodo}_value'] = row_val
+                                        row[f'{day}_{periodo}_desc'] = row_desc
+
+                        elif name == "viento":
+                            if isinstance(metric_data, list):
+                                for val in metric_data:
+                                    periodo = val.get('periodo', '').replace('-', '_')
+                                    velocidad = safe_get_value(val, 'velocidad', 0)
+                                    direccion = val.get('direccion', '')
+                                    
+                                    # Solo agregar si hay datos relevantes
+                                    if velocidad != 0 or direccion != "":
+                                        row[f'{day}_{periodo}_velocidad'] = velocidad
+                                        row[f'{day}_{periodo}_direccion'] = direccion
+                        
+                        # Para otras métricas simples
+                        else:
+                            if isinstance(metric_data, list):
+                                for i, val in enumerate(metric_data, start=1):
+                                    if isinstance(val, dict):
+                                        row[f'{day}_value{i}'] = safe_get_value(val, value)
+                                        # Agregar campos extra si existen
+                                        for field in extra_fields:
+                                            if field in val:
+                                                row[f'{day}_{field}{i}'] = val[field]
+                                    else:
+                                        row[f'{day}_value{i}'] = val if val != "" else 0
+                            else:
+                                row[f'{day}_value'] = safe_get_value(metric_data, value)
             
             processed_data.append(row)
 
-        # Convertir a DataFrame de Pandas
+        # Convertir a DataFrame y guardar (igual que antes)
         df = pd.DataFrame(processed_data)
-
-        # Guardar como CSV
         csv_path = os.path.join(precip_csv_dir, f'prediccion_{name}.csv')
         df.to_csv(csv_path, index=False, encoding='utf-8')
         
     except Exception as e:
         print(f"Error al procesar los datos: {str(e)}")
         return None
+
+def safe_get_value(data, key, default=0):
+    value = data.get(key, default)
+    return default if value == "" else value
