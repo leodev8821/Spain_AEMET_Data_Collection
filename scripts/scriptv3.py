@@ -199,7 +199,7 @@ def data_from_error_journal():
     except Exception as e:
         logger.error(f"Error inesperado data_from_error_journal: {str(e)}", exc_info=True)
 
-def prediction_data_by_town():
+def prediction_data_by_town(resume=False):
     '''Obtiene las predicciones meteorologicas de la AEMET - España por cada municipio'''
     try:
         # 1. Configuración inicial
@@ -212,12 +212,27 @@ def prediction_data_by_town():
 
         all_towns_data = []
 
-        # 2. Leer los códigos de las estaciones desde JSON
-        logger.info("Obteniendo códigos de municipios")
-        towns_codes_file_path = os.path.join(api_dir, 'json', 'towns_codes.json')
-        towns_codes = verify_json_docs(json_path_dir=towns_codes_file_path, message="Debes crear primero el archivo de códigos de municipios")
+        # 2. Determinar el conjunto de municipios a procesar
+        if resume:
+            logger.info("Obteniendo códigos de municipios pendientes...")
+            town_codes_path = os.path.join(api_dir, 'json', 'pending_town_codes.json')
+            towns_codes = verify_json_docs(
+                json_path_dir=town_codes_path,
+                message="No existen códigos pendientes"
+            )
+        else:
+            logger.info("Obteniendo códigos de todos los municipios...")
+            town_codes_path = os.path.join(api_dir, 'json', 'towns_codes.json')
+            towns_codes = verify_json_docs(
+                json_path_dir=town_codes_path,
+                message="Debes crear primero el archivo de códigos de municipios"
+            )
 
-        # 5. Procesar estaciones
+        if not towns_codes:
+            logger.warning("No hay municipios para procesar")
+            return
+
+        # 3. Procesar estaciones
         total_towns = len(towns_codes)
 
         for i, (code, name) in enumerate(towns_codes.items(), 1):
@@ -245,7 +260,7 @@ def prediction_data_by_town():
             # Una espera para la nueva fetch
             time.sleep(REQUEST_DELAY)
 
-        # 6. Guardar resultados finales
+        # 4. Guardar resultados finales
         if all_towns_data:
             with open(output_file_path, 'w', encoding='utf-8') as f:
                 json.dump(all_towns_data, f, ensure_ascii=False, indent=4)
