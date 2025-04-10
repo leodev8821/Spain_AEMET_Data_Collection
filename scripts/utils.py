@@ -124,7 +124,7 @@ def historical_data_to_csv(name: str):
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
-        temp_csv_dir = os.path.join(api_dir, 'csv')
+        temp_csv_dir = os.path.join(api_dir, 'csv', 'historical')
         all_data_dir = os.path.join(api_dir, 'json', 'weather_data.json')
         ema_codes_dir = os.path.join(api_dir, 'json', 'ema_codes.json')
 
@@ -171,7 +171,7 @@ def historical_data_to_csv(name: str):
         if all_dfs:
             df_final = pd.concat(all_dfs, ignore_index=True)
 
-            temp_csv = os.path.join(temp_csv_dir, f'{name}.csv')
+            temp_csv = os.path.join(temp_csv_dir, f'{name}_historico.csv')
 
             df_final.to_csv(
                 temp_csv, 
@@ -362,10 +362,10 @@ def predictions_to_csv(name: str):
         # Configuración de directorios (igual que antes)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
-        precip_csv_dir = os.path.join(api_dir, 'csv')
+        prediction_csv_dir = os.path.join(api_dir, 'csv', 'prediction')
         prediction_weather_dir = os.path.join(api_dir, 'json', f'prediction_progress.json')
         
-        os.makedirs(precip_csv_dir, exist_ok=True)
+        os.makedirs(prediction_csv_dir, exist_ok=True)
 
         # Cargar los datos
         with open(prediction_weather_dir, 'r', encoding='utf-8') as f:
@@ -446,7 +446,7 @@ def predictions_to_csv(name: str):
 
         # Convertir a DataFrame y guardar (igual que antes)
         df = pd.DataFrame(processed_data)
-        csv_path = os.path.join(precip_csv_dir, f'prediccion_{name}.csv')
+        csv_path = os.path.join(prediction_csv_dir, f'prediccion_{name}.csv')
         df.to_csv(csv_path, index=False, encoding='utf-8')
         
     except Exception as e:
