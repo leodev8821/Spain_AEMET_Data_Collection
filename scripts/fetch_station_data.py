@@ -168,17 +168,6 @@ def fetch_historical_station_data(
                 # Recorre la fecha para insertar los datos
                 for day_data in data:
                     date = day_data.get('fecha', 'no_data')
-                    # station_info["date"][date] = {
-                    #     "avg_t": day_data.get('tmed', 'no_data'),
-                    #     "max_t": day_data.get('tmax', 'no_data'),
-                    #     "min_t": day_data.get('tmin', 'no_data'),
-                    #     "precip": day_data.get('prec', 'no_data'),
-                    #     "avg_vel": day_data.get('velmedia', 'no_data'),
-                    #     "max_vel": day_data.get('racha', 'no_data'),
-                    #     "avg_rel_hum": day_data.get('hrMedia', 'no_data'),
-                    #     "max_rel_hum": day_data.get('hrMax', 'no_data'),
-                    #     "min_rel_hum": day_data.get('hrMin', 'no_data'),
-                    # }
 
                     station_info["date"][date] = {
                         date: format_historical_weather_data(day_data)
@@ -309,17 +298,6 @@ def fetch_error_data(last_request_time=None):
                 }
 
                 date = station_data.get('fecha', 'no_data')
-                # station_info["date"][date] = {
-                #     "avg_t": station_data.get('tmed', 'no_data'),
-                #     "max_t": station_data.get('tmax', 'no_data'),
-                #     "min_t": station_data.get('tmin', 'no_data'),
-                #     "precip": station_data.get('prec', 'no_data'),
-                #     "avg_vel": station_data.get('velmedia', 'no_data'),
-                #     "max_vel": station_data.get('racha', 'no_data'),
-                #     "avg_rel_hum": station_data.get('hrMedia', 'no_data'),
-                #     "max_rel_hum": station_data.get('hrMax', 'no_data'),
-                #     "min_rel_hum": station_data.get('hrMin', 'no_data'),
-                # }
 
                 station_info["date"][date] = {
                     date: format_historical_weather_data(station_data)

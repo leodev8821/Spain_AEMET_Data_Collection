@@ -16,7 +16,7 @@ errors.json
 error_data.json
 error_prediction.json
 pp.json
-prediccion.json
+pending_towns_codes.json
 prediction_progress.json
 
 # Archivos txt

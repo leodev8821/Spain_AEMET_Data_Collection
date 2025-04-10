@@ -138,7 +138,6 @@ def data_from_error_journal():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
         weather_data_path = os.path.join(api_dir, 'json', 'weather_data.json')
-        output_file_path = os.path.join(api_dir, 'json', 'error_data.json')
         
         # Cargar el JSON principal
         weather_data = verify_json_docs(weather_data_path, message="No esta creado weather_data.json")
@@ -215,7 +214,7 @@ def prediction_data_by_town(resume=False):
         # 2. Determinar el conjunto de municipios a procesar
         if resume:
             logger.info("Obteniendo códigos de municipios pendientes...")
-            town_codes_path = os.path.join(api_dir, 'json', 'pending_town_codes.json')
+            town_codes_path = os.path.join(api_dir, 'json', 'pending_towns_codes.json')
             towns_codes = verify_json_docs(
                 json_path_dir=town_codes_path,
                 message="No existen códigos pendientes"
