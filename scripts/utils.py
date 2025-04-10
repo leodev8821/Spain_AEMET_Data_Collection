@@ -323,13 +323,31 @@ def format_prediction_weather_data(day_data):
         "uvMax": day_data.get('uvMax', 'no_data'),
     }
 
-def precipitations_to_csv():
+def predictions_to_csv(name:str):
+    match name:
+        case "precipitaciones":
+            key = "probPrecipitacion"
+        case "cota_nieve":
+            key = "cotaNieveProv"
+        case "estado_cielo":
+            key = "estadoCielo"
+        case "viento":
+            key = "viento"
+        case "racha_max":
+            key = "rachaMax"
+        case "temperatura":
+            key = "temperatura"
+        case "sens_termica":
+            key = "sensTermica"
+        case "humedad_relativa":
+            key = "humedadRelativa"
+
     try:
         # Configuración de directorios
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
         precip_csv_dir = os.path.join(api_dir, 'csv')
-        prediction_weather_dir = os.path.join(api_dir, 'json', 'prediction_progress.json')
+        prediction_weather_dir = os.path.join(api_dir, 'json', f'prediction_progress.json')
         
         os.makedirs(precip_csv_dir, exist_ok=True)
 
@@ -349,32 +367,34 @@ def precipitations_to_csv():
             }
             
             # Procesar las predicciones para cada día
-            for day in ['day_1', 'day_2','day_3', 'day_4','day_5', 'day_6', 'day_7']:
+            for day in ['day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6', 'day_7']:
                 if day in entry['prediction']:
-                    # Obtener la fecha del día (primera clave en el diccionario day_X)
-                    day_date = next(iter(entry['prediction'][day].keys()))[:10]
-                    row[f'{day}_date'] = day_date
+                    day_data = entry['prediction'][day]
+                    date_key = next(iter(day_data.keys()))  # Obtiene la primera clave (timestamp)
+                    row[f'{day}_date'] = date_key[:10]  # Solo la fecha
                     
-                    # Obtener todos los valores de probPrecipitacion en orden
-                    prob_values = entry['prediction'][day][next(iter(entry['prediction'][day].keys()))]['probPrecipitacion']
-                    for i, prob in enumerate(prob_values, start=1):
-                        row[f'{day}_value{i}'] = prob['value']
+                    # Manejar diferentes tipos de claves
+                    if isinstance(key, list):
+                        # Para casos como viento, temperatura, etc. que tienen múltiples métricas
+                        for metric in key:
+                            if metric in day_data[date_key]:
+                                values = day_data[date_key][metric]
+                                for i, val in enumerate(values, start=1):
+                                    row[f'{day}_{metric}_value{i}'] = val['value']
+                    else:
+                        # Para precipitaciones que tiene una sola métrica
+                        if key in day_data[date_key]:
+                            values = day_data[date_key][key]
+                            for i, val in enumerate(values, start=1):
+                                row[f'{day}_value{i}'] = val['value']
             
             processed_data.append(row)
 
         # Convertir a DataFrame de Pandas
         df = pd.DataFrame(processed_data)
 
-        # Ordenar columnas (opcional, para mantener el mismo orden que en tu versión)
-        columns = ['id', 'town', 'province', 'fetched_date']
-        for day in ['day_1', 'day_2','day_3', 'day_4','day_5', 'day_6', 'day_7']:
-            columns.append(f'{day}_date')
-            columns.extend([f'{day}_value{i}' for i in range(1, 8)])
-        
-        df = df[columns]  # Reordenar columnas
-
         # Guardar como CSV
-        csv_path = os.path.join(precip_csv_dir, 'precipitations_prediction.csv')
+        csv_path = os.path.join(precip_csv_dir, f'prediccion_{name}.csv')
         df.to_csv(csv_path, index=False, encoding='utf-8')
         
     except Exception as e:

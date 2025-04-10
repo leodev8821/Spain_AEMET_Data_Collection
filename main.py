@@ -12,30 +12,28 @@ logger = logging.getLogger(__name__)
 def main():
    
    while True:
-    print("\n********* MENÚ DE LA APLICACIÓN *********")
+    print("\n********************* MENÚ DE LA APLICACIÓN ************************")
     print("1. Obtener códigos de las estaciones")
     print("2. Obtener los datos históricos")
-    print("3. Crear temperatura.csv")
-    print("4. Crear precipitaciones.csv")
-    print("5. Crear viento.csv")
-    print("6. Crear humedad_relativa.csv")
-    print("7. Recuperar información histórica a los errores")
-    print("8. Obtener previsión de los próximos 7 dias de todos los municipios")
+    print("3. Crear archivos 'csv' históricos")
+    print("4. Recuperar información histórica a los errores")
+    print("5. Obtener previsión de los próximos 7 dias de todos los municipios")
+    print("6. Crear archivos 'csv' de previsión")
     print("0. Terminar la ejecución")
-    print("\n*****************************************")
+    print("\n********************************************************************")
 
     selection = input("Selecciona una opción: ").upper()
     
     match selection:
         case "1":
             # Obtener códigos de estaciones
-            print("1. Obtener códigos de las estaciones")
+            print("********************* 1. Obtener códigos de las estaciones *********************")
             logger.info("Obteniendo códigos de estaciones EMA...")
             obtain_and_group_stations_codes()
                     
         case "2":
             # Obtener toda la información solicitada de las estaciones en el rango de fecha
-            print("2. Obtener los datos históricos")
+            print("********************* 2. Obtener los datos históricos *********************")
             fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
             is_valid, message = date_validation(fecha)
             
@@ -44,40 +42,88 @@ def main():
             logger.error(message)
                     
         case "3":
-            # Crea un archivo con los datos de las temperatura en /csv/temperatura.csv
-            print("3. Crear temperatura.csv")
-            logger.info("Creando temperatura.csv...")
-            historical_data_to_csv('temperatura')
-                    
+            # Crea el archivo csv histórico
+            print("********************* 3. Crear archivos 'csv' históricos *********************")
+            print("1. Crear temperatura_historico.csv")
+            print("2. Crear humedad_relativa_historico.csv")
+            print("3. Crear precipitaciones_historico.csv")
+            print("4. Crear viento_historico.csv")
+            print("5. Volver")
+
+            subseleccion = input("Selecciona una opción: ").upper()
+            match subseleccion:
+                case "1":
+                    logger.info("Creando temperatura_historico.csv...")
+                    historical_data_to_csv('temperatura')
+                case "2":
+                    logger.info("Creando humedad_relativa_historico.csv...")
+                    historical_data_to_csv('humedad_relativa')
+                case "3":
+                    logger.info("Creando precipitaciones_historico.csv...")
+                    historical_data_to_csv('precipitaciones')
+                case "4":
+                    logger.info("Creando viento_historico.csv...")
+                    historical_data_to_csv('viento')
+                case "5":
+                    continue
+                case _:
+                    print("Opción no válida")
+        
         case "4":
-            # Crea un archivo con los datos de las precipitaciones en /csv/precipitaciones.csv
-            print("4. Crear precipitaciones.csv")
-            logger.info("Creando precipitaciones.csv...")
-            historical_data_to_csv('precipitaciones')
-        
-        case "5":
-            # Crea un archivo con los datos de las racha media en /csv/viento.csv
-            print("5. Crear viento.csv")
-            logger.info("Creando viento.csv...")
-            historical_data_to_csv('viento')
-        
-        case "6":
-            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
-            print("6. Crear humedad_relativa.csv")
-            logger.info("Creando humedad_relativa.csv...")
-            historical_data_to_csv('humedad_relativa')
-        
-        case "7":
-            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
-            print("7. Recuperar información histórica a los errores")
+            # Recuperar datos de estaciones con errores
+            print("********************* 4. Recuperar información histórica de los errores *********************")
             logger.info("Obteniendo información desde errors.json...")
             data_from_error_journal()
         
-        case "8":
+        case "5":
             # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
-            print("8. Obtener previsión de los próximos 7 dias de todos los municipios")
+            print("********************* 5. Obtener previsión de los próximos 7 dias de todos los municipios *********************")
             logger.info("Obteniendo información...")
             prediction_data_by_town()
+        
+        case "6":            
+            # Crea el archivo csv de prediccion
+            print("********************* 3. Crear archivos 'csv' históricos *********************")
+            print("1. Crear prediccion_precipitaciones.csv")
+            print("2. Crear prediccion_cota_nieve.csv")
+            print("3. Crear prediccion_estado_cielo.csv")
+            print("4. Crear prediccion_viento.csv")
+            print("5. Crear prediccion_racha_max.csv")
+            print("6. Crear prediccion_temperatura.csv")
+            print("7. Crear prediccion_sens_termica.csv")
+            print("8. Crear prediccion_humedad_relativa.csv")
+            print("0. Volver")
+
+            subseleccion = input("Selecciona una opción: ").upper()
+            match subseleccion:
+                case "1":
+                    logger.info("Creando prediccion_precipitaciones.csv...")
+                    predictions_to_csv('precipitaciones')
+                case "2":
+                    logger.info("Creando prediccion_cota_nieve.csv...")
+                    predictions_to_csv('cota_nieve')
+                case "3":
+                    logger.info("Creando prediccion_estado_cielo.csv...")
+                    predictions_to_csv('estado_cielo')
+                case "4":
+                    logger.info("Creando prediccion_viento.csv...")
+                    predictions_to_csv('viento')
+                case "5":
+                    logger.info("Creando prediccion_racha_max.csv...")
+                    predictions_to_csv('racha_max')
+                case "6":
+                    logger.info("Creando prediccion_temperatura.csv...")
+                    #predictions_to_csv('temperatura')
+                case "7":
+                    logger.info("Creando prediccion_sens_termica.csv...")
+                    #predictions_to_csv('sens_termica')
+                case "8":
+                    logger.info("Creando prediccion_humedad_relativa.csv...")
+                    #predictions_to_csv('humedad_relativa')
+                case "0":
+                    continue
+                case _:
+                    print("Opción no válida")
 
         case "0":
             break
