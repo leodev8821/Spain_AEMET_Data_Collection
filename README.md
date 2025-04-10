@@ -36,8 +36,11 @@ python -m main
 Seleccionar las opciones del menú en la consola que son:
 
 **1. Obtener códigos de las estaciones**
+
   - Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET.
+
 **2. Obtener los datos históricoss**
+
   - Debes ingresar una fecha en formato **'YYY-MM-DD'** y realizará la consulta desde el 2025-01-01 hasta la fecha introducida (toma tiempo).
 
 **3. Crear archivos 'csv' históricos**
@@ -69,9 +72,11 @@ Seleccionar las opciones del menú en la consola que son:
   - Actualiza la información de ***weather_data.json*** desde ***errors.json*** que son las estaciones que produjeron errores.
 
 **5. Obtener previsión de los próximos 7 dias de todos los municipios**
+
   - Crea un archivo con la previsión de los próximos 7 días en ***~/json/prediction_progress.json***
 
 **6. Reanudar obtención de previsión de los próximos 7 dias**
+
   - Reanuda y actualiza el archivo ***~/json/prediction_progress.json*** con la previsión de los próximos 7 días de los municipios restantes en ***~/json/pending_town_codes.json***
 
 **7. Crear archivos 'csv' de previsión**
@@ -115,7 +120,8 @@ Seleccionar las opciones del menú en la consola que son:
       - Retorna al menú anterior.
 
 **0. Terminar la ejecución**
-  - Finaliza la ejecución de la aplicación
+
+  Finaliza la ejecución de la aplicación
 
 # Estructura de la aplicación
 ````txt
