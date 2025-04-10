@@ -18,24 +18,44 @@ logger = logging.getLogger(__name__)
 DEFAULT_START_DATE = '2025-01-01T00:00:00UTC'
 REQUEST_DELAY = 3.0  # segundos entre solicitudes
 
-def historical_data(final_date):
+def historical_data(final_date, resume=False):
     '''Obtiene la información histórica de las estaciones de meteorología de la AEMET - España'''
     try:
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
-        
-        progress_file_path = os.path.join(api_dir, 'json', 'progress.json')
         output_file_path = os.path.join(api_dir, 'json', 'weather_data.json')
         now = datetime.now(timezone.utc).isoformat()
 
-        # 2. Leer los códigos de las estaciones desde JSON
+        # 2. Cargar datos existentes
+        if os.path.exists(output_file_path):
+            with open(output_file_path, 'r', encoding='utf-8') as f:
+                existing_data = json.load(f)
+            
+            if resume:
+                # En modo resume, usamos los datos existentes
+                stations_data = existing_data
+                # Reconstruir processed_dates desde los datos existentes
+                processed_dates = defaultdict(set)
+                for station_code, station_info in existing_data.items():
+                    processed_dates[station_code].update(station_info['date'].keys())
+            else:
+                # Si no es resume, empezamos de cero
+                stations_data = {}
+                processed_dates = defaultdict(set)
+        else:
+            stations_data = {}
+            processed_dates = defaultdict(set)
+
+        # 3. Leer los códigos de las estaciones desde JSON
         logger.info("Obteniendo códigos de estaciones EMA")
-        json_path = os.path.join(api_dir, 'json', 'codes_group.json')
-        ema_codes = verify_json_docs(json_path_dir=json_path, message="Debes crear primero el archivo de códigos EMA - Opción 1")
+        group_codes_path = os.path.join(api_dir, 'json', 'pending_group_codes.json' if resume else 'codes_group.json')
+        ema_codes = verify_json_docs(json_path_dir=group_codes_path, 
+                                message="Debes crear primero el archivo de códigos EMA o pendientes")
         
-        # 3. Cargar progreso previo
-        processed_dates, stations_data = load_progress(progress_file_path)
+        if not ema_codes:
+            logger.warning("No hay códigos de estaciones para procesar")
+            return None
 
         # 4. Configurar rango de fechas
         encoded_init_date = DEFAULT_START_DATE.replace(':', '%3A')
@@ -44,15 +64,22 @@ def historical_data(final_date):
 
         # 5. Procesar estaciones
         total_stations = len(ema_codes)
+        processed_count = 0
+        updated_stations = set()
 
         for i, (group, stations_codes) in enumerate(ema_codes.items(), 1):
             encoded_stations_codes = stations_codes.replace(',', '%2C')
-            logger.info(f"[{i}/{total_stations}] Procesando estaciónes del {group}")
+            station_codes_list = stations_codes.split(',')
+            
+            # En modo resume, saltar si todas las estaciones del grupo ya están completas
+            if resume and all(code in processed_dates and len(processed_dates[code]) > 0 
+                           for code in station_codes_list):
+                logger.info(f"↩️ [{i}/{total_stations}] Grupo {group} ya procesado. Saltando...")
+                continue
 
-            if stations_codes not in processed_dates:
-                processed_dates[stations_codes] = set()
+            logger.info(f"[{i}/{total_stations}] Procesando estaciones del {group}")
 
-            # Obtener datos de la estación (solo fechas faltantes)
+            # Obtener datos de la estación
             result = fetch_historical_station_data(
                 encoded_init_date,
                 encoded_end_date,
@@ -60,30 +87,25 @@ def historical_data(final_date):
                 last_request_time=now
             )
 
-            # Si no hay información de esa estación, continúa con la siguiente
             if not result:
                 logger.warning(f"No se obtuvieron datos para el {group}")
                 continue
 
-            # Iterar sobre cada estación en result
-            new_dates_for_group  = set()
-            for station_data in result: 
+            # Procesar cada estación en el resultado
+            for station_data in result:
                 current_station_code = station_data.get('town_code')
                 logger.info(f"Procesando estación: [{current_station_code}]")
 
                 # Filtrar solo las fechas que no hemos procesado
                 new_data = {}
                 for date, values in station_data['date'].items():
-                    if date not in processed_dates[stations_codes]:
+                    if date not in processed_dates.get(current_station_code, set()):
                         new_data[date] = {
                             'values': values,
-                            'ts_insert': now,
+                            'ts_insert': now if current_station_code not in stations_data else stations_data[current_station_code]['date'].get(date, {}).get('ts_insert', now),
                             'ts_update': now
                         }
 
-                        new_dates_for_group.add(date)
-
-                # Si no hay información nueva para la estación, sigue con la siguiente
                 if not new_data:
                     logger.info(f"No hay datos nuevos para {current_station_code}")
                     continue
@@ -99,28 +121,21 @@ def historical_data(final_date):
                 
                 # Agregar solo datos nuevos
                 stations_data[current_station_code]['date'].update(new_data)
-                
-                # Actualizar fechas procesadas
-            processed_dates[current_station_code].update(new_dates_for_group)
+                processed_dates[current_station_code].update(new_data.keys())
+                processed_count += len(new_data)
+                updated_stations.add(current_station_code)
 
-            # Guardar progreso cada grupo de estaciones o al final
-            if i % 1 == 0 or i == total_stations:
-                logger.info(f"[{i}] grupo de estaciones guardado en progress")
-                save_progress(progress_file_path, processed_dates, stations_data)
+            # Guardar progreso después de cada grupo (directamente en weather_data.json)
+            if updated_stations:
+                with open(output_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(stations_data, f, ensure_ascii=False, indent=4)
+                logger.info(f"Progreso guardado después del grupo {group}")
+                updated_stations.clear()
 
-            # Una espera para la nueva fetch
             time.sleep(REQUEST_DELAY)
 
-        # 6. Guardar resultados finales
-        if stations_data:
-            with open(output_file_path, 'w', encoding='utf-8') as f:
-                json.dump(stations_data, f, ensure_ascii=False, indent=4)
-            os.remove(progress_file_path)
-            logger.info(f"Datos guardados en {output_file_path}")
-            return stations_data
-        
-        logger.warning("No se obtuvieron datos válidos")
-        return None
+        logger.info(f"✅ Proceso completado. Datos nuevos procesados: {processed_count}")
+        return stations_data
         
     except KeyError as e:
         logger.error(f"Error de key {str(e)}")
@@ -129,7 +144,7 @@ def historical_data(final_date):
     except json.JSONDecodeError as e:
         logger.error(f"Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado ScriptV3: {str(e)}", exc_info=True)
+        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
 
 def data_from_error_journal():
     '''Función para actualizar el weather_data.json con la información desde errors.json'''

@@ -21,6 +21,7 @@ def main():
     print("6. Reanudar obtención de previsión de los próximos 7 dias")
     print("7. Crear archivos 'csv' de previsión")
     print("8. Generar pending_towns_codes.json")
+    print("9. Generar pending_group_codes.json")
     print("0. Terminar la ejecución")
     print("\n********************************************************************")
 
@@ -34,6 +35,33 @@ def main():
             obtain_and_group_stations_codes()
                     
         case "2":
+            print("********************* 2. Obtener los datos históricos *********************")
+            print("1. Generar archivo desde cero")
+            print("2. Reanudar la obtención de la información")
+            print("0. Volver")
+
+            subseleccion = input("Selecciona una opción: ").upper()
+            match subseleccion:
+                case "1":
+                    fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
+                    is_valid, message = date_validation(fecha)
+                    
+                    if is_valid:
+                        logger.info("📝 Obteniendo la información desde cero...")
+                        historical_data(fecha)
+                    logger.error(message)
+                case "2":
+                    fecha = input("Introduce la fecha final (YYYY-MM-DD) Igual que la anterior: ")
+                    is_valid, message = date_validation(fecha)
+                    
+                    if is_valid:
+                        logger.info("📝 Reanudando desde pending_group_codes...")
+                        historical_data(fecha, resume=True)
+                    logger.error(message)
+                case "0":
+                    continue
+                case _:
+                    print("Opción no válida")
             # Obtener toda la información solicitada de las estaciones en el rango de fecha
             print("********************* 2. Obtener los datos históricos *********************")
             fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
@@ -145,6 +173,19 @@ def main():
                     logger.warning("No se encontraron ciudades pendientes o hubo un error")
             except Exception as e:
                 logger.error(f"Error al ejecutar check_missing_town_codes: {e}")
+
+        case "9":
+            # Verificar grupos de estaciones faltantes
+            print("********************* 8. Generar pending_group_codes.json *********************")
+            logger.info("Verificando grupos de estaciones pendientes...")
+            try:
+                result = check_missing_group_codes()
+                if result:
+                    logger.info(f"Se han encontrado {len(result)} grupos de estaciones pendientes")
+                else:
+                    logger.warning("No se encontraron grupos de estaciones pendientes o hubo un error")
+            except Exception as e:
+                logger.error(f"Error al ejecutar check_missing_group_codes: {e}")
 
         case "0":
             break

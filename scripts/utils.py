@@ -2,7 +2,7 @@ import logging
 import requests
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 import re
 from dotenv import load_dotenv
 import pandas as pd
@@ -144,57 +144,6 @@ def build_journal(name, codes_group, server_response, fetched_url, fetched_date)
     logger.info(f"No se recibieron datos válidos. Ver --> {error_journal_dir}")
     return None
 
-def load_progress(progress_file: str):
-    '''Función para cargar el progreso previo desde archivo si existe'''
-    try:
-        data = verify_json_docs(
-            progress_file,
-            "No existe el archivo de progreso. Se empezará desde cero."
-        )
-        
-        processed_dates = defaultdict(set)
-        
-        # Extraer fechas del formato {"station_group": {"dates": [...]}}
-        for station_group, dates_data in data.get("processed_dates", {}).items():
-            if not isinstance(dates_data, dict) or "dates" not in dates_data:
-                raise ValueError(f"Formato inválido en processed_dates para {station_group}")
-            processed_dates[station_group] = set(dates_data["dates"])
-        
-        stations_data = data.get("stations_data", {})
-        return processed_dates, stations_data
-    
-    except ValueError as e:
-        logger.warning(f"Error en el formato del archivo: {e}")
-        return defaultdict(set), {}
-    except Exception as e:
-        logger.warning(f"Error al cargar progreso: {e}")
-        return defaultdict(set), {}
-
-def save_progress(progress_file, processed_dates, stations_data):
-    '''Función para guardar el progreso de las estaciones consultadas'''
-    try:
-        # Convertir los sets de fechas a listas y estructurarlos bajo "dates"
-        transformed_dates = {
-            station_group: {"dates": list(dates)} 
-            for station_group, dates in processed_dates.items()
-        }
-        
-        progress_data = {
-            "processed_dates": transformed_dates,
-            "stations_data": stations_data
-        }
-        
-        with open(progress_file, "w", encoding="utf-8") as f:
-            json.dump(progress_data, f, ensure_ascii=False, indent=4)
-    
-    except Exception as e:
-        logger.error(f"Error al guardar progreso: {e}")
-
-def update_timestamp(stations_data, station_code, date_key):
-    '''Función para actualiza el timestamp de updatedAt para la fecha actual en string'''
-    now = datetime.now(timezone.utc).isoformat()
-    stations_data[station_code]['date'][date_key]['ts_update'] = now
-
 def build_url(
         encoded_init_date:str = None, 
         encoded_end_date:str = None, 
@@ -284,4 +233,63 @@ def check_missing_town_codes():
     
     except Exception as e:
         logger.error(f"Error: {str(e)}")
+        return None
+    
+def check_missing_group_codes():
+    """
+    Compara los códigos de los grupos entre codes_group.json y weather_data.json
+    y genera una lista de los grupos pendientes en pending_group_codes.json
+    """
+    try:
+        # Configuración de rutas
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        api_dir = os.path.dirname(script_dir)
+        json_dir = os.path.join(api_dir, 'json')
+        
+        codes_group_path = os.path.join(json_dir, 'codes_group.json')
+        weather_data_path = os.path.join(json_dir, 'weather_data.json')
+        output_path = os.path.join(json_dir, 'pending_group_codes.json')
+
+        # Cargar codes_group.json
+        codes_group = verify_json_docs(json_path_dir=codes_group_path, 
+                                     message="No existe el archivo codes_group.json")
+        logger.info(f"✅ Cargados {len(codes_group)} grupos de estaciones de codes_group.json")
+        
+        # Cargar weather_data.json (si existe)
+        weather_data = {}
+        if os.path.exists(weather_data_path):
+            weather_data = verify_json_docs(json_path_dir=weather_data_path, 
+                                          message="")
+            logger.info(f"✅ Cargados {len(weather_data)} estaciones en weather_data.json")
+        else:
+            logger.info("ℹ️ No existe weather_data.json, todos los grupos se consideran pendientes")
+
+        # Extraer códigos de estaciones existentes en weather_data.json
+        existing_codes = set(weather_data.keys())
+
+        # Determinar qué grupos tienen estaciones pendientes
+        pending_groups = {}
+        
+        for group_name, stations_str in codes_group.items():
+            group_stations = set(stations_str.split(','))
+            
+            # Verificar si alguna estación del grupo no está en weather_data
+            missing_stations = group_stations - existing_codes
+            
+            if missing_stations:
+                # Si hay estaciones faltantes, añadir el grupo al diccionario pendiente
+                pending_groups[group_name] = stations_str
+
+        logger.info(f"📊 Grupos pendientes: {len(pending_groups)}/{len(codes_group)}")
+        logger.info(f"ℹ️ Estaciones faltantes: {sum(len(v.split(',')) for v in pending_groups.values())}")
+
+        # Guardar el archivo con los grupos pendientes
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(pending_groups, f, indent=4, ensure_ascii=False)
+                    
+        logger.info(f"📝 Guardados {len(pending_groups)} grupos pendientes en {output_path}")
+        return pending_groups
+    
+    except Exception as e:
+        logger.error(f"❌ Error en check_missing_group_codes: {str(e)}", exc_info=True)
         return None
