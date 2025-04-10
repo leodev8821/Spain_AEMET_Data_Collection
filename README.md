@@ -51,23 +51,23 @@ Seleccionar las opciones del menú en la consola que son:
 
     **1. Crear temperatura_historico.csv**.
 
-      Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
+     Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
 
     **2. Crear humedad_relativa_historico.csv**
 
-      Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
+     Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
 
     **3. Crear precipitaciones_historico.csv**
 
-      Crea el archivo en ***~/csv/historical/precipitaciones_historico.csv***.
+     Crea el archivo en ***~/csv/historical/precipitaciones_historico.csv***.
 
     **4. Crear viento_historico.csv**
 
-      Crea el archivo en ***~/csv/historical/viento_historico.csv***.
+     Crea el archivo en ***~/csv/historical/viento_historico.csv***.
 
     **0. Volver**
 
-      Retorna al menú anterior.
+     Retorna al menú anterior.
 
 **4. Recuperar información histórica de los errores**
 
