@@ -7,6 +7,7 @@ import re
 from dotenv import load_dotenv
 import pandas as pd
 from collections import defaultdict
+from .csv_convert import *
 
 # Configurar logging
 logging.basicConfig(
@@ -107,88 +108,6 @@ def re_fetch_errors_journal():
         return url_to_fetch
     except ValueError as e:
         logger.error(f"Error al cargar errors.json {str(e)}")
-
-
-def historical_data_to_csv(name: str):
-    '''Función para guardar la información en un archivo CSV'''
-    match name:
-        case "precipitaciones":
-            keys = ["precip"]
-        case "viento":
-            keys = ["avg_vel", "max_vel"]
-        case "temperatura":
-            keys = ["avg_t", "max_t", "min_t"]
-        case "humedad_relativa":
-            keys = ["avg_rel_hum", "max_rel_hum", "min_rel_hum"]
-
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        api_dir = os.path.dirname(script_dir)
-        temp_csv_dir = os.path.join(api_dir, 'csv', 'historical')
-        all_data_dir = os.path.join(api_dir, 'json', 'weather_data.json')
-        ema_codes_dir = os.path.join(api_dir, 'json', 'ema_codes.json')
-
-        os.makedirs(temp_csv_dir, exist_ok=True)
-
-        all_data = verify_json_docs(all_data_dir, message="No esta creado weather_codes.json")
-        ema_codes = verify_json_docs(ema_codes_dir, message="No esta creado ema_codes.json")
-
-        all_dfs = []
-
-        # Solo se usan los 'ema_codes' existentes
-        for town, code in ema_codes.items():
-            if code in all_data:  # Verificar si el código existe
-                data = []
-                logger.info(f"Procesando {town} ({code})...")
-                
-                for date, values in all_data[code]['date'].items():
-
-                    common_fields = {
-                            'date': date,
-                            'province': all_data[code]['province'],
-                            'town': all_data[code]['town'],
-                            'ts_insert': values['ts_insert'],
-                            'ts_update': values['ts_update']
-                    }
-
-                    for key in keys:
-                        name_str = values['values'][key]
-
-                        # Verificar si el valor del campo es un número
-                        if name_str == 'no_data' or name_str == 'Ip' or name_str == 'Acum':
-                            common_fields[key] = name_str
-                        else:
-                            common_fields[key] = float(str(name_str).replace(',', '.'))
-                    
-                    data.append(common_fields)
-                
-                # Crear DataFrame y agregarlo a la lista
-                if data:
-                    df = pd.DataFrame(data)
-                    all_dfs.append(df)
-
-        # Combinar todos los DataFrames en uno solo
-        if all_dfs:
-            df_final = pd.concat(all_dfs, ignore_index=True)
-
-            temp_csv = os.path.join(temp_csv_dir, f'{name}_historico.csv')
-
-            df_final.to_csv(
-                temp_csv, 
-                sep=',',
-                encoding='utf-8',
-                header=True,
-                decimal='.',
-                index=False
-            )
-
-            logger.info(f"Archivo de {name} creado correctamente en {temp_csv_dir} ")
-            return None
-        else:
-            logger.info("No hay datos válidos para procesar")
-            return None
-    except ValueError as e:
-        logger.error(f"Error al acceder al JSON: {str(e)}")
 
 def build_journal(name, codes_group, server_response, fetched_url, fetched_date):
     '''Función para crear un JSON que registra los errores al hacer fetch al API'''
@@ -323,136 +242,46 @@ def format_prediction_weather_data(day_data):
         "uvMax": day_data.get('uvMax', 'no_data'),
     }
 
-def predictions_to_csv(name: str):
-    match name:
-        case "precipitaciones":
-            key = "probPrecipitacion"
-            value = "value"
-            extra_fields = []
-        case "cota_nieve":
-            key = "cotaNieveProv"
-            value = "value"
-            extra_fields = []
-        case "estado_cielo":
-            key = "estadoCielo"
-            value = "value"
-            extra_fields = ["descripcion"]
-        case "viento":
-            key = "viento"
-            value = "velocidad"
-            extra_fields = ["direccion"]
-        case "racha_max":
-            key = "rachaMax"
-            value = "value"
-            extra_fields = []
-        case "temperatura":
-            key = "temperatura"
-            value = None
-            extra_fields = []
-        case "sens_termica":
-            key = "sensTermica"
-            value = None
-            extra_fields = []
-        case "humedad_relativa":
-            key = "humedadRelativa"
-            value = None
-            extra_fields = []
-
+def check_missing_town_codes():
+    """
+    Compara los codigos de los pueblos entre towns_codes.json y prediction_data.json y genera una lista de los codigos de pueblos pendientes
+    """
     try:
-        # Configuración de directorios (igual que antes)
+        # configuramos la ubicacion del archivo
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
-        prediction_csv_dir = os.path.join(api_dir, 'csv', 'prediction')
-        prediction_weather_dir = os.path.join(api_dir, 'json', f'prediction_progress.json')
+        json_dir = os.path.join(api_dir, 'json')
         
-        os.makedirs(prediction_csv_dir, exist_ok=True)
+        towns_codes_path = os.path.join(json_dir, 'towns_codes.json')
+        prediction_data_path = os.path.join(json_dir, 'prediction_data.json')
+        output_path = os.path.join(json_dir, 'pending_towns_codes.json')
 
-        # Cargar los datos
-        with open(prediction_weather_dir, 'r', encoding='utf-8') as f:
-            prediction_weather_data = json.load(f)
-
-        # Preparar los datos para el CSV
-        processed_data = []
+        # cargamos towns_codes.json
+        towns_codes = verify_json_docs(json_path_dir=towns_codes_path, message="No existe el archivo towns_codes.json")
+        logger.info(f"✅ Cargados los {len(towns_codes)} codigos de pueblos de towns_codes.json")
         
-        for entry in prediction_weather_data:
-            row = {
-                'id': entry['id'],
-                'town': entry['town'],
-                'province': entry['province'],
-                'fetched_date': entry['fetched'][:10]
-            }
-            
-            # Procesar las predicciones para cada día
-            for day in ['day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6', 'day_7']:
-                if day in entry['prediction']:
-                    day_data = entry['prediction'][day]
-                    date_key = next(iter(day_data.keys()))  # Obtiene la primera clave (timestamp)
-                    row[f'{day}_date'] = date_key[:10]  # Solo la fecha
+        # Cargamos prediction_data.json
+        prediction_data = verify_json_docs(json_path_dir=prediction_data_path, message="No existe el archivo prediction_data.json")
+        logger.info(f"✅ Cargados {len(prediction_data)} registros en prediction_data.json")
+
+        # Extraemos los IDS existentes de prediction_data.json
+        existing_codes = [entry['id'] for entry in prediction_data if 'id' in entry]
+        
+        # Generamos el diccionario de los codigos pendientes, que no se encuentran en prediction_data.json
+        pending_towns = {}
+        for code, town in towns_codes.items():
+            if int(code) not in existing_codes:
+                pending_towns[code] = town
+
+        logger.info(f"Pendientes {len(pending_towns)} municipios en total")
+
+      # Guardamos el JSON en un archivo con la estructura de towns_codes.json
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(pending_towns, f, indent=4, ensure_ascii=False)
                     
-                    if key in day_data[date_key]:
-                        metric_data = day_data[date_key][key]
-                        
-                        # Para métricas con estructura compleja (temperatura, sensTermica, humedadRelativa)
-                        if name in ['temperatura', 'sens_termica', 'humedad_relativa']:
-                            row[f'{day}_maxima'] = metric_data.get('maxima', 0)
-                            row[f'{day}_minima'] = metric_data.get('minima', 0)
-                            
-                            for dato in metric_data.get('dato', []):
-                                hora = dato.get('hora', '')
-                                val = dato.get('value', 0)
-                                row[f'{day}_hora{hora}'] = val
-                        
-                        # Para estado_cielo (con descripción)
-                        elif name == "estado_cielo":
-                            if isinstance(metric_data, list):
-                                for val in metric_data:
-                                    periodo = val.get('periodo', '').replace('-', '_')  # 00-24 -> 00_24
-                                    row_val = safe_get_value(val, 'value', "")
-                                    row_desc = val.get('descripcion', "")
-                                    
-                                    # Solo agregar si hay datos
-                                    if row_val != "" or row_desc != "":
-                                        row[f'{day}_{periodo}_value'] = row_val
-                                        row[f'{day}_{periodo}_desc'] = row_desc
-
-                        elif name == "viento":
-                            if isinstance(metric_data, list):
-                                for val in metric_data:
-                                    periodo = val.get('periodo', '').replace('-', '_')
-                                    velocidad = safe_get_value(val, 'velocidad', 0)
-                                    direccion = val.get('direccion', '')
-                                    
-                                    # Solo agregar si hay datos relevantes
-                                    if velocidad != 0 or direccion != "":
-                                        row[f'{day}_{periodo}_velocidad'] = velocidad
-                                        row[f'{day}_{periodo}_direccion'] = direccion
-                        
-                        # Para otras métricas simples
-                        else:
-                            if isinstance(metric_data, list):
-                                for i, val in enumerate(metric_data, start=1):
-                                    if isinstance(val, dict):
-                                        row[f'{day}_value{i}'] = safe_get_value(val, value)
-                                        # Agregar campos extra si existen
-                                        for field in extra_fields:
-                                            if field in val:
-                                                row[f'{day}_{field}{i}'] = val[field]
-                                    else:
-                                        row[f'{day}_value{i}'] = val if val != "" else 0
-                            else:
-                                row[f'{day}_value'] = safe_get_value(metric_data, value)
-            
-            processed_data.append(row)
-
-        # Convertir a DataFrame y guardar (igual que antes)
-        df = pd.DataFrame(processed_data)
-        csv_path = os.path.join(prediction_csv_dir, f'prediccion_{name}.csv')
-        df.to_csv(csv_path, index=False, encoding='utf-8')
-        
+        logger.info(f"📝 Se han guardado {len(pending_towns)} códigos de municipios pendientes en {output_path}")
+        return pending_towns
+    
     except Exception as e:
-        print(f"Error al procesar los datos: {str(e)}")
+        logger.error(f"Error: {str(e)}")
         return None
-
-def safe_get_value(data, key, default=0):
-    value = data.get(key, default)
-    return default if value == "" else value

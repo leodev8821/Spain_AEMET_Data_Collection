@@ -55,16 +55,16 @@ def main():
             subseleccion = input("Selecciona una opción: ").upper()
             match subseleccion:
                 case "1":
-                    logger.info("Creando temperatura_historico.csv...")
+                    logger.info("📝 Creando temperatura_historico.csv...")
                     historical_data_to_csv('temperatura')
                 case "2":
-                    logger.info("Creando humedad_relativa_historico.csv...")
+                    logger.info("📝 Creando humedad_relativa_historico.csv...")
                     historical_data_to_csv('humedad_relativa')
                 case "3":
-                    logger.info("Creando precipitaciones_historico.csv...")
+                    logger.info("📝 Creando precipitaciones_historico.csv...")
                     historical_data_to_csv('precipitaciones')
                 case "4":
-                    logger.info("Creando viento_historico.csv...")
+                    logger.info("📝 Creando viento_historico.csv...")
                     historical_data_to_csv('viento')
                 case "0":
                     continue
@@ -105,29 +105,29 @@ def main():
             subseleccion = input("Selecciona una opción: ").upper()
             match subseleccion:
                 case "1":
-                    logger.info("Creando prediccion_precipitaciones.csv...")
+                    logger.info("📝 Creando prediccion_precipitaciones.csv...")
                     predictions_to_csv('precipitaciones')
                 case "2":
-                    logger.info("Creando prediccion_cota_nieve.csv...")
+                    logger.info("📝 Creando prediccion_cota_nieve.csv...")
                     predictions_to_csv('cota_nieve')
                 case "3":
-                    logger.info("Creando prediccion_estado_cielo.csv...")
+                    logger.info("📝 Creando prediccion_estado_cielo.csv...")
                     predictions_to_csv('estado_cielo')
                 case "4":
-                    logger.info("Creando prediccion_viento.csv...")
+                    logger.info("📝 Creando prediccion_viento.csv...")
                     predictions_to_csv('viento')
                 case "5":
-                    logger.info("Creando prediccion_racha_max.csv...")
+                    logger.info("📝 Creando prediccion_racha_max.csv...")
                     predictions_to_csv('racha_max')
                 case "6":
-                    logger.info("Creando prediccion_temperatura.csv...")
-                    #predictions_to_csv('temperatura')
+                    logger.info("📝 Creando prediccion_temperatura.csv...")
+                    predictions_to_csv('temperatura')
                 case "7":
-                    logger.info("Creando prediccion_sens_termica.csv...")
-                    #predictions_to_csv('sens_termica')
+                    logger.info("📝 Creando prediccion_sens_termica.csv...")
+                    predictions_to_csv('sens_termica')
                 case "8":
-                    logger.info("Creando prediccion_humedad_relativa.csv...")
-                    #predictions_to_csv('humedad_relativa')
+                    logger.info("📝 Creando prediccion_humedad_relativa.csv...")
+                    predictions_to_csv('humedad_relativa')
                 case "0":
                     continue
                 case _:

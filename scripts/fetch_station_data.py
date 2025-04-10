@@ -77,7 +77,7 @@ api_retry = retry(
 
 @api_retry
 def api_request(url, headers=None, timeout=(3.05, 27)):
-    """Realiza peticiones HTTP con manejo de errores y rate limiting."""
+    """Función principal que realiza los fetchs teniendo en cuenta el RateLimit para reintentos."""
     try:
         response = requests.get(url, headers=headers, timeout=timeout)
         
@@ -215,7 +215,7 @@ def fetch_historical_station_data(
     
 @api_retry
 def fetch_error_data(last_request_time=None):
-    """Función para obtener los datos de las estaciones que fallaron anteriormente error_journal/errors.json"""
+    """Función para obtener los datos de las estaciones que fallaron (historicos) en error_journal/errors.json"""
     response = {}
     grouped_stations = []
     data_url = None
