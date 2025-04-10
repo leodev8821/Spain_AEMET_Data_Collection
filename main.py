@@ -16,9 +16,10 @@ def main():
     print("1. Obtener códigos de las estaciones")
     print("2. Obtener los datos históricos")
     print("3. Crear archivos 'csv' históricos")
-    print("4. Recuperar información histórica a los errores")
+    print("4. Recuperar información histórica de los errores")
     print("5. Obtener previsión de los próximos 7 dias de todos los municipios")
-    print("6. Crear archivos 'csv' de previsión")
+    print("6. Reanudar obtención de previsión de los próximos 7 dias")
+    print("7. Crear archivos 'csv' de previsión")
     print("8. Generar pending_towns_codes.json")
     print("0. Terminar la ejecución")
     print("\n********************************************************************")
@@ -49,7 +50,7 @@ def main():
             print("2. Crear humedad_relativa_historico.csv")
             print("3. Crear precipitaciones_historico.csv")
             print("4. Crear viento_historico.csv")
-            print("5. Volver")
+            print("0. Volver")
 
             subseleccion = input("Selecciona una opción: ").upper()
             match subseleccion:
@@ -65,7 +66,7 @@ def main():
                 case "4":
                     logger.info("Creando viento_historico.csv...")
                     historical_data_to_csv('viento')
-                case "5":
+                case "0":
                     continue
                 case _:
                     print("Opción no válida")
@@ -77,12 +78,18 @@ def main():
             data_from_error_journal()
         
         case "5":
-            # Crea un archivo con los datos de las racha media en /csv/humedad_relativa.csv
+            # Crea un archivo con la previsión de los próximos 7 días en json/prediction_progress.json
             print("********************* 5. Obtener previsión de los próximos 7 dias de todos los municipios *********************")
             logger.info("Obteniendo información...")
             prediction_data_by_town()
         
-        case "6":            
+        case "6":
+            # Actualiza el archivo json/prediction_progress.json con la previsión de los próximos 7 días de los municipios restantes
+            print("********************* 6. Reanudar obtención de previsión de los próximos 7 dias *********************")
+            logger.info("Obteniendo información...")
+            prediction_data_by_town(resume=True)
+        
+        case "7":            
             # Crea el archivo csv de prediccion
             print("********************* 3. Crear archivos 'csv' históricos *********************")
             print("1. Crear prediccion_precipitaciones.csv")
