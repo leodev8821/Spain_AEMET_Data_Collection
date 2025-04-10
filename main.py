@@ -19,6 +19,7 @@ def main():
     print("4. Recuperar información histórica a los errores")
     print("5. Obtener previsión de los próximos 7 dias de todos los municipios")
     print("6. Crear archivos 'csv' de previsión")
+    print("8. Generar pending_towns_codes.json")
     print("0. Terminar la ejecución")
     print("\n********************************************************************")
 
@@ -124,6 +125,19 @@ def main():
                     continue
                 case _:
                     print("Opción no válida")
+
+        case "8":
+            # Verificar ciudades faltantes
+            print("********************* 8. Generar pending_towns_codes.json *********************")
+            logger.info("Verificando ciudades pendientes...")
+            try:
+                result = check_missing_town_codes()
+                if result:
+                    logger.info(f"Se han encontrado {len(result)} ciudades pendientes")
+                else:
+                    logger.warning("No se encontraron ciudades pendientes o hubo un error")
+            except Exception as e:
+                logger.error(f"Error al ejecutar check_missing_town_codes: {e}")
 
         case "0":
             break
