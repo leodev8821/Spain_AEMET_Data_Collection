@@ -194,7 +194,6 @@ def fetch_historical_station_data(
         build_journal(
             name="errors",
             codes_group=station_code,
-            server_status=response.status_code,
             server_response=str(e), 
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date)
@@ -206,7 +205,6 @@ def fetch_historical_station_data(
         build_journal(
             name="errors",
             codes_group=station_code,
-            server_status=response.status_code,
             server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date
@@ -322,7 +320,6 @@ def fetch_error_data(last_request_time=None):
         build_journal(
             name="errors",
             codes_group=current_url if current_url else "URL no disponible",
-            server_status=response.status_code,
             server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date
@@ -335,7 +332,6 @@ def fetch_error_data(last_request_time=None):
         build_journal(
             name="errors",
             codes_group=current_url if current_url else "URL no disponible",
-            server_status=response.status_code,
             server_response=str(e),
             fetched_url=data_url if data_url else "URL no disponible",
             fetched_date=fetched_date
@@ -387,6 +383,7 @@ def fetch_prediction_station_data(town_code, last_request_time=None):
         
         if not data or not isinstance(data, list) or len(data) == 0:
             logger.error("Datos de predicción no disponibles o formato incorrecto")
+            build_journal(name="prediction_error",codes_group=town_code,server_response=data,fetched_date=last_request_time)
             return None
         
         # Procesar datos de predicción

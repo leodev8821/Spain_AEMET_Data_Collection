@@ -45,7 +45,7 @@ Seleccionar las opciones del menú en la consola que son:
 
   Esta opción abre otro prompt para ingresar otras opciones:
 
-    1️⃣ **1. Generar archivo desde cero**.
+  1️⃣ **1. Generar archivo desde cero**.
 
       Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
 

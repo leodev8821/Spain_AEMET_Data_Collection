@@ -17,12 +17,12 @@ def main():
     print("**                   OBTENCIÓN DE DATOS DE LA AEMET                 **")
     print("*"*70)
     print("\n*********************** MENÚ DE LA APLICACIÓN ************************")
-    print("\n** 1. Obtener códigos de las estaciones                             **")
-    print("** 2. Obtener los datos históricos                                  **")
-    print("** 3. Crear archivos 'csv' históricos                               **")
-    print("** 4. Previsión próximos 7 dias (todos los municipios)              **")
-    print("** 5. Crear archivos 'csv' de predicción                            **")
-    print("** 0. Terminar la ejecución                                         **\n")
+    print("\n** 1️⃣   Obtener códigos de las estaciones                            **")
+    print("** 2️⃣   Obtener los datos históricos                                 **")
+    print("** 3️⃣   Crear archivos 'csv' históricos                              **")
+    print("** 4️⃣   Previsión próximos 7 dias (todos los municipios)             **")
+    print("** 5️⃣   Crear archivos 'csv' de predicción                           **")
+    print("** 0️⃣   Terminar la ejecución                                        **\n")
     print("*"*70)
 
     selection = input("Selecciona una opción: \n").upper()
@@ -30,12 +30,12 @@ def main():
     match selection:
 
         case "1":
-            print("**************** 1. Obtener códigos de las estaciones ****************\n")
+            print("**************** 1️⃣  Obtener códigos de las estaciones ****************\n")
             logger.info("Obteniendo códigos de estaciones EMA...")
             obtain_and_group_stations_codes()
                     
         case "2":
-            print("****************** 2. Obtener los datos históricos *******************\n")
+            print("****************** 2️⃣  Obtener los datos históricos *******************\n")
             print("** 1. Generar archivo desde cero                                    **")
             print("** 2. Reanudar la obtención de la información                       **")
             print("** 3. Recuperar información histórica desde los errores             **")
