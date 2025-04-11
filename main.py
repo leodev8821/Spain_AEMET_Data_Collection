@@ -17,12 +17,12 @@ def main():
     print("**                   OBTENCIÓN DE DATOS DE LA AEMET                 **")
     print("*"*70)
     print("\n*********************** MENÚ DE LA APLICACIÓN ************************")
-    print("\n** 1️⃣   Obtener códigos de las estaciones                            **")
-    print("** 2️⃣   Obtener los datos históricos                                 **")
-    print("** 3️⃣   Crear archivos 'csv' históricos                              **")
-    print("** 4️⃣   Previsión próximos 7 dias (todos los municipios)             **")
-    print("** 5️⃣   Crear archivos 'csv' de predicción                           **")
-    print("** 0️⃣   Terminar la ejecución                                        **\n")
+    print("\n** 1️⃣   Obtener códigos de las estaciones                    🌐      **")
+    print("** 2️⃣   Obtener los datos históricos                         🌐      **")
+    print("** 3️⃣   Crear archivos 'csv' históricos                      📝      **")
+    print("** 4️⃣   Previsión próximos 7 dias (todos los municipios)     🌐      **")
+    print("** 5️⃣   Crear archivos 'csv' de predicción                   📝      **")
+    print("** 0️⃣   Terminar la ejecución                                ⏹️       **\n")
     print("*"*70)
 
     selection = input("Selecciona una opción: \n").upper()
@@ -31,21 +31,21 @@ def main():
 
         case "1":
             print("**************** 1️⃣  Obtener códigos de las estaciones ****************\n")
-            logger.info("Obteniendo códigos de estaciones EMA...")
+            logger.info("🌐 Obteniendo códigos de estaciones EMA...")
             obtain_and_group_stations_codes()
                     
         case "2":
             print("****************** 2️⃣  Obtener los datos históricos *******************\n")
-            print("** 1. Generar archivo desde cero                                    **")
-            print("** 2. Reanudar la obtención de la información                       **")
-            print("** 3. Recuperar información histórica desde los errores             **")
-            print("** 0. Volver                                                        **")
+            print("** 1️⃣   Generar archivo desde cero                                   **")
+            print("** 2️⃣   Reanudar la obtención de la información                      **")
+            print("** 3️⃣   Recuperar información histórica desde los errores            **")
+            print("** 0️⃣   Volver                                                       **")
             print("*"*70)
 
             subseleccion = input("Selecciona una opción: \n").upper()
             match subseleccion:
                 case "1":
-                    print("** 1. Generar archivo desde cero                                    **\n")
+                    print("** 1️⃣   Generar archivo desde cero                       **\n")
                     fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
                     is_valid, message = date_validation(fecha)
                     
@@ -56,7 +56,7 @@ def main():
                         logger.error(message)
 
                 case "2":
-                    print("** 2. Reanudar la obtención de la información                       **\n")
+                    print("** 2️⃣   Reanudar la obtención de la información                       **\n")
                     fecha = input("Introduce la fecha final (YYYY-MM-DD) Igual que la anterior: ")
                     is_valid, message = date_validation(fecha)
                     
@@ -74,7 +74,7 @@ def main():
                         logger.error(message)
 
                 case "3":
-                    print("** 3. Recuperar información histórica desde los errores             **\n")
+                    print("** 3️⃣   Recuperar información histórica desde los errores             **\n")
                     logger.info("Obteniendo información desde errors.json...")
                     data_from_error_journal()
 
@@ -85,12 +85,12 @@ def main():
                     print("Opción no válida")
                     
         case "3":
-            print("***************** 3. Crear archivos 'csv' históricos *****************")
-            print("** 1. Crear temperatura_historico.csv                               **")
-            print("** 2. Crear humedad_relativa_historico.csv                          **")
-            print("** 3. Crear precipitaciones_historico.csv                           **")
-            print("** 4. Crear viento_historico.csv                                    **")
-            print("** 0. Volver                                                        **")
+            print("***************** 3️⃣  Crear archivos 'csv' históricos *****************")
+            print("** 1️⃣   Crear temperatura_historico.csv          📝                  **")
+            print("** 2️⃣   Crear humedad_relativa_historico.csv     📝                  **")
+            print("** 3️⃣   Crear precipitaciones_historico.csv      📝                  **")
+            print("** 4️⃣   Crear viento_historico.csv               📝                  **")
+            print("** 0️⃣   Volver                                                       **")
             print("*"*70)
 
             subseleccion = input("Selecciona una opción: \n").upper()
@@ -119,23 +119,24 @@ def main():
                     print("Opción no válida")
         
         case "4":
-            print("******** 4. Previsión próximos 7 dias (todos los municipios) *********")
-            print("** 1. Obtener previsión de los próximos 7 dias                      **")
-            print("** 2. Reanudar obtención de previsión de los próximos 7 dias        **")
-            print("** 3. Recuperar información de predicción desde los errores         **")
-            print("** 0. Volver                                                        **")
+
+            print("******** 4️⃣  Previsión próximos 7 dias (todos los municipios) *********")
+            print("** 1️⃣   Obtener previsión de los próximos 7 dias                     **")
+            print("** 2️⃣   Reanudar obtención de previsión de los próximos 7 dias       **")
+            print("** 3️⃣   Recuperar información de predicción desde los errores        **")
+            print("** 0️⃣   Volver                                                       **")
             print("*"*70)
 
             subseleccion = input("Selecciona una opción: \n").upper()
             match subseleccion:
 
                 case "1":
-                    print("** 1. Obtener previsión de los próximos 7 dias                      **")
+                    print("** 1️⃣   Obtener previsión de los próximos 7 dias                      **")
                     logger.info("Obteniendo información...")
                     prediction_data_by_town()
 
                 case "2":
-                    print("** 2. Reanudar obtención de previsión de los próximos 7 dias        **")
+                    print("** 2️⃣   Reanudar obtención de previsión de los próximos 7 dias        **")
                     logger.info("Verificando ciudades pendientes...")
                     result = check_missing_town_codes()
                     if result:
@@ -146,7 +147,7 @@ def main():
                         logger.warning("No se encontraron ciudades pendientes o hubo un error")
 
                 case "3":
-                    print("** 3. Recuperar información de predicción desde los errores         **")
+                    print("** 3️⃣    Recuperar información de predicción desde los errores         **")
                     logger.info("Obteniendo información desde error_prediction.json...")
                     prediction_data_from_error_journal()
                     
@@ -158,15 +159,15 @@ def main():
         
         case "5":            
             print("************** 5. Crear archivos 'csv' de predicción *****************")
-            print("** 1. Crear prediccion_precipitaciones.csv                          **")
-            print("** 2. Crear prediccion_cota_nieve.csv                               **")
-            print("** 3. Crear prediccion_estado_cielo.csv                             **")
-            print("** 4. Crear prediccion_viento.csv                                   **")
-            print("** 5. Crear prediccion_racha_max.csv                                **")
-            print("** 6. Crear prediccion_temperatura.csv                              **")
-            print("** 7. Crear prediccion_sens_termica.csv                             **")
-            print("** 8. Crear prediccion_humedad_relativa.csv                         **")
-            print("** 0. Volver                                                        **")
+            print("** 1️⃣   Crear prediccion_precipitaciones.csv         📝             **")
+            print("** 2️⃣   Crear prediccion_cota_nieve.csv              📝             **")
+            print("** 3️⃣   Crear prediccion_estado_cielo.csv            📝             **")
+            print("** 4️⃣   Crear prediccion_viento.csv                  📝             **")
+            print("** 5️⃣   Crear prediccion_racha_max.csv               📝             **")
+            print("** 6️⃣   Crear prediccion_temperatura.csv             📝             **")
+            print("** 7️⃣   Crear prediccion_sens_termica.csv            📝             **")
+            print("** 8️⃣   Crear prediccion_humedad_relativa.csv        📝             **")
+            print("** 0️⃣   Volver                                                       **")
             print("*"*70)
 
             subseleccion = input("Selecciona una opción: \n").upper()
