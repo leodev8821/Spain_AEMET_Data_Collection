@@ -130,6 +130,7 @@ def historical_data(final_date, resume=False):
             if updated_stations:
                 with open(output_file_path, 'w', encoding='utf-8') as f:
                     json.dump(stations_data, f, ensure_ascii=False, indent=4)
+    
                 logger.info(f"Progreso guardado después del grupo {group}")
                 updated_stations.clear()
 
@@ -354,8 +355,7 @@ def prediction_data_from_error_journal():
         
         # 4. Limpiar el journal de errores si se procesaron correctamente
         if processed_count > 0:
-            with open(error_journal_path, 'w', encoding='utf-8') as f:
-                json.dump([], f, ensure_ascii=False, indent=4)
+            os.remove(error_journal_path)
             logger.info(f"Journal de errores limpiado correctamente")
         
         logger.info(f"Proceso completado. Municipios actualizados: {processed_count}")
