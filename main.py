@@ -122,6 +122,7 @@ def main():
             print("******** 4. Previsión próximos 7 dias (todos los municipios) *********")
             print("** 1. Obtener previsión de los próximos 7 dias                      **")
             print("** 2. Reanudar obtención de previsión de los próximos 7 dias        **")
+            print("** 3. Recuperar información de predicción desde los errores         **")
             print("** 0. Volver                                                        **")
             print("*"*70)
 
@@ -143,6 +144,11 @@ def main():
                         prediction_data_by_town(resume=True)
                     else:
                         logger.warning("No se encontraron ciudades pendientes o hubo un error")
+
+                case "3":
+                    print("** 3. Recuperar información de predicción desde los errores         **")
+                    logger.info("Obteniendo información desde error_prediction.json...")
+                    prediction_data_from_error_journal()
                     
                 case "0":
                     continue
