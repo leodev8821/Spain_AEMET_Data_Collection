@@ -139,13 +139,13 @@ def historical_data(final_date, resume=False):
         return stations_data
         
     except KeyError as e:
-        logger.error(f"Error de key {str(e)}")
+        logger.error(f"❌Error de key {str(e)}")
     except ValueError as e:
-        logger.error(f"Error al acceder al JSON: {str(e)}")
+        logger.error(f"❌Error al acceder al JSON: {str(e)}")
     except json.JSONDecodeError as e:
-        logger.error(f"Error al procesar archivos JSON: {str(e)}")
+        logger.error(f"❌Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
+        logger.error(f"❌Error inesperado: {str(e)}", exc_info=True)
 
 def data_from_error_journal():
     '''Función para actualizar el weather_data.json con la información desde errors.json'''
@@ -163,7 +163,7 @@ def data_from_error_journal():
         result = fetch_error_data(last_request_time=now)
         
         if not result:
-            logger.error("No se obtuvieron datos válidos")
+            logger.error(f"❌No se obtuvieron datos válidos")
             raise ValueError("No se obtuvieron datos válidos")
 
         new_dates_for_group = set()
@@ -206,13 +206,13 @@ def data_from_error_journal():
         logger.info(f"Datos actualizados correctamente. Nuevas fechas añadidas: {new_dates_for_group}")
         
     except KeyError as e:
-        logger.error(f"Error de key {str(e)}")
+        logger.error(f"❌Error de key {str(e)}")
     except ValueError as e:
-        logger.error(f"Error al acceder al JSON: {str(e)}")
+        logger.error(f"❌Error al acceder al JSON: {str(e)}")
     except json.JSONDecodeError as e:
-        logger.error(f"Error al procesar archivos JSON: {str(e)}")
+        logger.error(f"❌Error al procesar archivos JSON: {str(e)}")
     except Exception as e:
-        logger.error(f"Error inesperado data_from_error_journal: {str(e)}", exc_info=True)
+        logger.error(f"❌Error inesperado data_from_error_journal: {str(e)}", exc_info=True)
 
 def prediction_data_by_town(resume=False, recovery=False):
     '''Obtiene las predicciones meteorologicas de la AEMET - España por cada municipio'''
@@ -290,3 +290,86 @@ def prediction_data_by_town(resume=False, recovery=False):
         logger.error(f"❌ Error al procesar JSON: {str(e)}")
     except Exception as e:
         logger.error(f"❌ Error inesperado: {str(e)}", exc_info=True)
+
+def prediction_data_from_error_journal():
+    '''Función para actualizar prediction_data.json con la información desde error_prediction.json'''
+    try:
+        # 1. Configuración inicial
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        api_dir = os.path.dirname(script_dir)
+        prediction_data_path = os.path.join(api_dir, 'json', 'prediction_data.json')
+        error_journal_path = os.path.join(api_dir, 'error_journal', 'error_prediction.json')
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Verificar que existe error_prediction.json
+        if not os.path.exists(error_journal_path):
+            logger.warning(f"❗No existe el archivo error_prediction.json")
+            return None
+        
+        
+        # 2. Usar verify_json_docs para cargar los archivos JSON
+        prediction_data = verify_json_docs(prediction_data_path, [])
+        error_entries = verify_json_docs(error_journal_path, [])
+        
+        # Convertir a diccionario para acceso eficiente
+        prediction_dict = {str(town.get('id')): town for town in prediction_data if 'id' in town}
+        
+        if not error_entries:
+            logger.warning(f"❗El archivo error_prediction.json está vacío")
+            return None
+        
+        logger.info(f"Procesando {len(error_entries)} entradas del journal de errores")
+        
+        # 3. Procesar cada entrada del journal de errores
+        processed_count = 0
+        
+        for entry in error_entries:
+            town_code = entry.get('station_code')
+            if not town_code:
+                logger.warning(f"❗Entrada sin código de municipio: {entry}")
+                continue
+            
+            # Obtener nuevos datos para este municipio
+            town_data = fetch_prediction_station_data(town_code, last_request_time=now)
+            
+            if town_data:
+                town_id = str(town_data.get('id', town_code))
+                # Conservar timestamp de inserción si existe
+                town_data['ts_insert'] = prediction_dict.get(town_id, {}).get('ts_insert', now)
+                town_data['ts_update'] = now
+                
+                # Actualizar el diccionario
+                prediction_dict[town_id] = town_data
+                processed_count += 1
+                logger.info(f"Datos actualizados para el municipio {town_id}")
+                
+                # Guardar progreso incremental
+                with open(prediction_data_path, 'w', encoding='utf-8') as f:
+                    json.dump(list(prediction_dict.values()), f, ensure_ascii=False, indent=4)
+            else:
+                logger.warning(f"❗No se pudieron recuperar datos para el municipio {town_code}")
+            
+            # Pausar entre peticiones
+            time.sleep(REQUEST_DELAY)
+        
+        # 4. Limpiar el journal de errores si se procesaron correctamente
+        if processed_count > 0:
+            with open(error_journal_path, 'w', encoding='utf-8') as f:
+                json.dump([], f, ensure_ascii=False, indent=4)
+            logger.info(f"Journal de errores limpiado correctamente")
+        
+        logger.info(f"Proceso completado. Municipios actualizados: {processed_count}")
+        return list(prediction_dict.values())
+        
+    except KeyError as e:
+        logger.error(f"❌Error de clave: {str(e)}")
+        return None
+    except ValueError as e:
+        logger.error(f"❌Error al acceder al JSON: {str(e)}")
+        return None
+    except json.JSONDecodeError as e:
+        logger.error(f"❌Error al procesar archivos JSON: {str(e)}")
+        return None
+    except Exception as e:
+        logger.error(f"❌Error inesperado en prediction_data_from_error_journal: {str(e)}", exc_info=True)
+        return None
