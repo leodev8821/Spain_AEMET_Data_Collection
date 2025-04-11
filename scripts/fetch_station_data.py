@@ -56,7 +56,7 @@ def is_rate_limit_error(response):
     
 # Decorador de tenacity para manejar los RateLimit y reintentar
 api_retry = retry(
-    stop=stop_after_attempt(5),  # Aumenta a 5 intentos
+    stop=stop_after_attempt(5),
     wait=wait_combine(
         wait_exponential(multiplier=1, min=4, max=60),
         wait_random(min=1, max=3)
@@ -69,7 +69,7 @@ api_retry = retry(
         retry_if_exception_type(RequestException) |
         retry_if_exception_type(HTTPError) |
         retry_if_exception_type(socket.gaierror) |
-        retry_if_exception_type(ProtocolError)  # Añade ProtocolError
+        retry_if_exception_type(ProtocolError)
     ),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True

@@ -145,7 +145,7 @@ def predictions_to_csv(name: str):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
         prediction_csv_dir = os.path.join(api_dir, 'csv', 'prediction')
-        prediction_weather_dir = os.path.join(api_dir, 'json', f'prediction_progress.json')
+        prediction_weather_dir = os.path.join(api_dir, 'json', f'prediction_data.json')
         
         os.makedirs(prediction_csv_dir, exist_ok=True)
 
@@ -201,14 +201,18 @@ def process_historical_data(all_data: dict, ema_codes: dict, keys: list) -> list
                     'ts_update': values['ts_update']
                 }
 
-                for key in keys:
-                    name_str = values['values'][key]
+                meteo_values = values['values'].get(date, {})
 
-                    # Verificar si el valor del campo es un número
-                    if name_str == 'no_data' or name_str == 'Ip' or name_str == 'Acum':
-                        common_fields[key] = name_str
+                for key in keys:
+                    if key in meteo_values:
+                        name_str = meteo_values[key]
+                        # Verificar si el valor del campo es un número
+                        if name_str == 'no_data' or name_str == 'Ip' or name_str == 'Acum':
+                            common_fields[key] = name_str
+                        else:
+                            common_fields[key] = float(str(name_str).replace(',', '.'))
                     else:
-                        common_fields[key] = float(str(name_str).replace(',', '.'))
+                        common_fields[key] = 'no_data'
                 
                 data.append(common_fields)
             

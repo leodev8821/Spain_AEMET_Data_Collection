@@ -93,9 +93,9 @@ def historical_data(final_date, resume=False):
                 continue
 
             # Procesar cada estación en el resultado
+            logger.info(f"Procesando grupo: [{group}]")
             for station_data in result:
                 current_station_code = station_data.get('town_code')
-                logger.info(f"Procesando estación: [{current_station_code}]")
 
                 # Filtrar solo las fechas que no hemos procesado
                 new_data = {}
@@ -107,7 +107,7 @@ def historical_data(final_date, resume=False):
                             'ts_update': now
                         }
 
-                if not new_data:
+                if not new_data and resume:
                     logger.info(f"No hay datos nuevos para {current_station_code}")
                     continue
 
@@ -214,7 +214,7 @@ def data_from_error_journal():
     except Exception as e:
         logger.error(f"Error inesperado data_from_error_journal: {str(e)}", exc_info=True)
 
-def prediction_data_by_town(resume=False):
+def prediction_data_by_town(resume=False, recovery=False):
     '''Obtiene las predicciones meteorologicas de la AEMET - España por cada municipio'''
     try:
         # 1. Configuración inicial
