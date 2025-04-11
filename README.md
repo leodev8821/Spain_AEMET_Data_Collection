@@ -37,15 +37,35 @@ python -m main
 
 Seleccionar las opciones del menú en la consola que son:
 
-🔵 **1. Obtener códigos de las estaciones**
+➡️ **Opción 1 --> Obtener códigos de las estaciones**
 
-  Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET.
+  Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET y crear los archivos ***json/ema_codes.json*** y ***json/codes_group.json***.
 
-🔵 **2. Obtener los datos históricoss**
+➡️ **Opción 2 --> Obtener los datos históricoss**
 
-  Debes ingresar una fecha en formato **'YYY-MM-DD'** y realizará la consulta desde el 2025-01-01 hasta la fecha introducida (toma tiempo).
+ Esta opción abre otro prompt para ingresar otras opciones:
 
-🔵 **3. Crear archivos 'csv' históricos**
+  🔸 **1. Generar archivo desde cero**.
+
+    Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
+
+  🔸 **2. Crear humedad_relativa_historico.csv**
+
+    Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
+
+  🔸 **3. Crear precipitaciones_historico.csv**
+
+    Crea el archivo en ***~/csv/historical/precipitaciones_historico.csv***.
+
+  🔸 **4. Crear viento_historico.csv**
+
+    Crea el archivo en ***~/csv/historical/viento_historico.csv***.
+
+  🔸 **0. Volver**
+
+    Retorna al menú anterior.
+
+🔵 **Opción 3 --> Crear archivos 'csv' históricos**
 
   * Esta opción abre otro prompt para ingresar otras opciones:
 
@@ -69,7 +89,7 @@ Seleccionar las opciones del menú en la consola que son:
 
      Retorna al menú anterior.
 
-🔵 **4. Recuperar información histórica de los errores**
+🔵 **Opción 4 --> Recuperar información histórica de los errores**
 
   Actualiza la información de ***weather_data.json*** desde ***errors.json*** que son las estaciones que produjeron errores.
 

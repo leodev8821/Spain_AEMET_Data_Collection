@@ -12,125 +12,158 @@ logger = logging.getLogger(__name__)
 def main():
    
    while True:
-    print("\n********************* MENÚ DE LA APLICACIÓN ************************")
-    print("1. Obtener códigos de las estaciones")
-    print("2. Obtener los datos históricos")
-    print("3. Crear archivos 'csv' históricos")
-    print("4. Recuperar información histórica de los errores")
-    print("5. Obtener previsión de los próximos 7 dias de todos los municipios")
-    print("6. Reanudar obtención de previsión de los próximos 7 dias")
-    print("7. Crear archivos 'csv' de previsión")
-    print("8. Generar pending_towns_codes.json")
-    print("9. Generar pending_group_codes.json")
-    print("0. Terminar la ejecución")
-    print("\n********************************************************************")
+    print("\n")
+    print("*"*70)
+    print("**                   OBTENCIÓN DE DATOS DE LA AEMET                 **")
+    print("*"*70)
+    print("\n*********************** MENÚ DE LA APLICACIÓN ************************")
+    print("\n** 1. Obtener códigos de las estaciones                             **")
+    print("** 2. Obtener los datos históricos                                  **")
+    print("** 3. Crear archivos 'csv' históricos                               **")
+    print("** 4. Previsión próximos 7 dias (todos los municipios)              **")
+    print("** 5. Crear archivos 'csv' de predicción                            **")
+    print("** 0. Terminar la ejecución                                         **\n")
+    print("*"*70)
 
-    selection = input("Selecciona una opción: ").upper()
+    selection = input("Selecciona una opción: \n").upper()
     
     match selection:
+
         case "1":
-            # Obtener códigos de estaciones
-            print("********************* 1. Obtener códigos de las estaciones *********************")
+            print("**************** 1. Obtener códigos de las estaciones ****************\n")
             logger.info("Obteniendo códigos de estaciones EMA...")
             obtain_and_group_stations_codes()
                     
         case "2":
-            print("********************* 2. Obtener los datos históricos *********************")
-            print("1. Generar archivo desde cero")
-            print("2. Reanudar la obtención de la información")
-            print("0. Volver")
+            print("****************** 2. Obtener los datos históricos *******************\n")
+            print("** 1. Generar archivo desde cero                                    **")
+            print("** 2. Reanudar la obtención de la información                       **")
+            print("** 3. Recuperar información histórica desde los errores             **")
+            print("** 0. Volver                                                        **")
+            print("*"*70)
 
-            subseleccion = input("Selecciona una opción: ").upper()
+            subseleccion = input("Selecciona una opción: \n").upper()
             match subseleccion:
                 case "1":
+                    print("** 1. Generar archivo desde cero                                    **\n")
                     fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
                     is_valid, message = date_validation(fecha)
                     
                     if is_valid:
                         logger.info("📝 Obteniendo la información desde cero...")
                         historical_data(fecha)
-                    logger.error(message)
+                    else:
+                        logger.error(message)
+
                 case "2":
+                    print("** 2. Reanudar la obtención de la información                       **\n")
                     fecha = input("Introduce la fecha final (YYYY-MM-DD) Igual que la anterior: ")
                     is_valid, message = date_validation(fecha)
                     
                     if is_valid:
-                        logger.info("📝 Reanudando desde pending_group_codes...")
-                        historical_data(fecha, resume=True)
-                    logger.error(message)
+                            logger.info("Verificando grupos de estaciones pendientes...")
+                            result = check_missing_group_codes()
+                            if result:
+                                print(f"Se han encontrado {len(result)} grupos de estaciones pendientes")
+                                logger.info("📝 Reanudando desde pending_group_codes...")
+                                historical_data(fecha, resume=True)
+                            else:
+                                logger.warning("No se encontraron grupos de estaciones pendientes o hubo un error")
+
+                    else:  
+                        logger.error(message)
+
+                case "3":
+                    print("** 3. Recuperar información histórica desde los errores             **\n")
+                    logger.info("Obteniendo información desde errors.json...")
+                    data_from_error_journal()
+
                 case "0":
                     continue
+
                 case _:
                     print("Opción no válida")
-            # Obtener toda la información solicitada de las estaciones en el rango de fecha
-            print("********************* 2. Obtener los datos históricos *********************")
-            fecha = input("Introduce la fecha final (YYYY-MM-DD): ")
-            is_valid, message = date_validation(fecha)
-            
-            if is_valid:
-                historical_data(fecha)
-            logger.error(message)
                     
         case "3":
-            # Crea el archivo csv histórico
-            print("********************* 3. Crear archivos 'csv' históricos *********************")
-            print("1. Crear temperatura_historico.csv")
-            print("2. Crear humedad_relativa_historico.csv")
-            print("3. Crear precipitaciones_historico.csv")
-            print("4. Crear viento_historico.csv")
-            print("0. Volver")
+            print("***************** 3. Crear archivos 'csv' históricos *****************")
+            print("** 1. Crear temperatura_historico.csv                               **")
+            print("** 2. Crear humedad_relativa_historico.csv                          **")
+            print("** 3. Crear precipitaciones_historico.csv                           **")
+            print("** 4. Crear viento_historico.csv                                    **")
+            print("** 0. Volver                                                        **")
+            print("*"*70)
 
-            subseleccion = input("Selecciona una opción: ").upper()
+            subseleccion = input("Selecciona una opción: \n").upper()
             match subseleccion:
+
                 case "1":
                     logger.info("📝 Creando temperatura_historico.csv...")
                     historical_data_to_csv('temperatura')
+
                 case "2":
                     logger.info("📝 Creando humedad_relativa_historico.csv...")
                     historical_data_to_csv('humedad_relativa')
+
                 case "3":
                     logger.info("📝 Creando precipitaciones_historico.csv...")
                     historical_data_to_csv('precipitaciones')
+
                 case "4":
                     logger.info("📝 Creando viento_historico.csv...")
                     historical_data_to_csv('viento')
+
                 case "0":
                     continue
+
                 case _:
                     print("Opción no válida")
         
         case "4":
-            # Recuperar datos de estaciones con errores
-            print("********************* 4. Recuperar información histórica de los errores *********************")
-            logger.info("Obteniendo información desde errors.json...")
-            data_from_error_journal()
-        
-        case "5":
-            # Crea un archivo con la previsión de los próximos 7 días en json/prediction_progress.json
-            print("********************* 5. Obtener previsión de los próximos 7 dias de todos los municipios *********************")
-            logger.info("Obteniendo información...")
-            prediction_data_by_town()
-        
-        case "6":
-            # Actualiza el archivo json/prediction_progress.json con la previsión de los próximos 7 días de los municipios restantes
-            print("********************* 6. Reanudar obtención de previsión de los próximos 7 dias *********************")
-            logger.info("Obteniendo información...")
-            prediction_data_by_town(resume=True)
-        
-        case "7":            
-            # Crea el archivo csv de prediccion
-            print("********************* 3. Crear archivos 'csv' históricos *********************")
-            print("1. Crear prediccion_precipitaciones.csv")
-            print("2. Crear prediccion_cota_nieve.csv")
-            print("3. Crear prediccion_estado_cielo.csv")
-            print("4. Crear prediccion_viento.csv")
-            print("5. Crear prediccion_racha_max.csv")
-            print("6. Crear prediccion_temperatura.csv")
-            print("7. Crear prediccion_sens_termica.csv")
-            print("8. Crear prediccion_humedad_relativa.csv")
-            print("0. Volver")
+            print("******** 4. Previsión próximos 7 dias (todos los municipios) *********")
+            print("** 1. Obtener previsión de los próximos 7 dias                      **")
+            print("** 2. Reanudar obtención de previsión de los próximos 7 dias        **")
+            print("** 0. Volver                                                        **")
+            print("*"*70)
 
-            subseleccion = input("Selecciona una opción: ").upper()
+            subseleccion = input("Selecciona una opción: \n").upper()
+            match subseleccion:
+
+                case "1":
+                    print("** 1. Obtener previsión de los próximos 7 dias                      **")
+                    logger.info("Obteniendo información...")
+                    prediction_data_by_town()
+
+                case "2":
+                    print("** 2. Reanudar obtención de previsión de los próximos 7 dias        **")
+                    logger.info("Verificando ciudades pendientes...")
+                    result = check_missing_town_codes()
+                    if result:
+                        logger.info(f"Se han encontrado {len(result)} ciudades pendientes")
+                        logger.info("Reanudando la obteniendo información...")
+                        prediction_data_by_town(resume=True)
+                    else:
+                        logger.warning("No se encontraron ciudades pendientes o hubo un error")
+                    
+                case "0":
+                    continue
+
+                case _:
+                    print("Opción no válida")
+        
+        case "5":            
+            print("************** 5. Crear archivos 'csv' de predicción *****************")
+            print("** 1. Crear prediccion_precipitaciones.csv                          **")
+            print("** 2. Crear prediccion_cota_nieve.csv                               **")
+            print("** 3. Crear prediccion_estado_cielo.csv                             **")
+            print("** 4. Crear prediccion_viento.csv                                   **")
+            print("** 5. Crear prediccion_racha_max.csv                                **")
+            print("** 6. Crear prediccion_temperatura.csv                              **")
+            print("** 7. Crear prediccion_sens_termica.csv                             **")
+            print("** 8. Crear prediccion_humedad_relativa.csv                         **")
+            print("** 0. Volver                                                        **")
+            print("*"*70)
+
+            subseleccion = input("Selecciona una opción: \n").upper()
             match subseleccion:
                 case "1":
                     logger.info("📝 Creando prediccion_precipitaciones.csv...")
@@ -160,32 +193,6 @@ def main():
                     continue
                 case _:
                     print("Opción no válida")
-
-        case "8":
-            # Verificar ciudades faltantes
-            print("********************* 8. Generar pending_towns_codes.json *********************")
-            logger.info("Verificando ciudades pendientes...")
-            try:
-                result = check_missing_town_codes()
-                if result:
-                    logger.info(f"Se han encontrado {len(result)} ciudades pendientes")
-                else:
-                    logger.warning("No se encontraron ciudades pendientes o hubo un error")
-            except Exception as e:
-                logger.error(f"Error al ejecutar check_missing_town_codes: {e}")
-
-        case "9":
-            # Verificar grupos de estaciones faltantes
-            print("********************* 8. Generar pending_group_codes.json *********************")
-            logger.info("Verificando grupos de estaciones pendientes...")
-            try:
-                result = check_missing_group_codes()
-                if result:
-                    logger.info(f"Se han encontrado {len(result)} grupos de estaciones pendientes")
-                else:
-                    logger.warning("No se encontraron grupos de estaciones pendientes o hubo un error")
-            except Exception as e:
-                logger.error(f"Error al ejecutar check_missing_group_codes: {e}")
 
         case "0":
             break
