@@ -37,21 +37,21 @@ python -m main
 
 Seleccionar las opciones del menú en la consola que son:
 
-➡️ **Opción 1 --> Obtener códigos de las estaciones**
+1️⃣ **Opción 1 ➡️ Obtener códigos de las estaciones**
 
   Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET y crear los archivos ***json/ema_codes.json*** y ***json/codes_group.json***.
 
-➡️ **Opción 2 --> Obtener los datos históricoss**
+2️⃣ **Opción 2 ➡️ Obtener los datos históricoss**
 
- Esta opción abre otro prompt para ingresar otras opciones:
+  Esta opción abre otro prompt para ingresar otras opciones:
 
-  🔸 **1. Generar archivo desde cero**.
+    1️⃣ **1. Generar archivo desde cero**.
 
-    Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
+      Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
 
-  🔸 **2. Crear humedad_relativa_historico.csv**
+    2️⃣ **2. Crear humedad_relativa_historico.csv**
 
-    Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
+      Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
 
   🔸 **3. Crear precipitaciones_historico.csv**
 
