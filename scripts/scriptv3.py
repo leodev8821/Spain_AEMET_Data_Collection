@@ -80,13 +80,14 @@ def historical_data(final_date, resume=False):
 
             logger.info(f"[{i}/{total_stations}] Procesando estaciones del {group}")
 
-            # Obtener datos de la estación
-            result = fetch_historical_station_data(
+            # Obtener datos de la estación y actualiza el timestamp para la próxima iteración
+            result, updated_now = fetch_historical_station_data(
                 encoded_init_date,
                 encoded_end_date,
                 encoded_stations_codes,
                 last_request_time=now
             )
+            now = updated_now
 
             if not result:
                 logger.warning(f"No se obtuvieron datos para el {group}")
@@ -161,7 +162,8 @@ def data_from_error_journal():
         now = datetime.now(timezone.utc).isoformat()
 
         # Obtener datos del journal de errores
-        result = fetch_error_data(last_request_time=now)
+        result, updated_now = fetch_error_data(last_request_time=now)
+        now = updated_now
         
         if not result:
             logger.error(f"❌No se obtuvieron datos válidos")
@@ -204,7 +206,7 @@ def data_from_error_journal():
         with open(weather_data_path, 'w', encoding='utf-8') as f:
             json.dump(weather_data, f, ensure_ascii=False, indent=4)
 
-        logger.info(f"Datos actualizados correctamente. Nuevas fechas añadidas: {new_dates_for_group}")
+        logger.info(f"✅ Datos actualizados correctamente. Nuevas fechas añadidas: {new_dates_for_group}")
         
     except KeyError as e:
         logger.error(f"❌Error de key {str(e)}")
@@ -221,15 +223,16 @@ def prediction_data_by_town(resume=False, recovery=False):
         # 1. Configuración inicial
         script_dir = os.path.dirname(os.path.abspath(__file__))
         api_dir = os.path.dirname(script_dir)
+        now = datetime.now(timezone.utc).isoformat()
         
         prediction_data_file_path = os.path.join(api_dir, 'json', 'prediction_data.json')
-        now = datetime.now(timezone.utc).isoformat()
 
         # 2. Cargar datos existentes si el archivo existe
         if os.path.exists(prediction_data_file_path):
             with open(prediction_data_file_path, 'r', encoding='utf-8') as f:
                 existing_data = json.load(f)
-            # Convertir a diccionario con id como clave para fácil acceso
+
+            # Crea un diccionario a partir de prediction_daja.json
             existing_data_dict = {str(town['id']): town for town in existing_data}
         else:
             existing_data_dict = {}
@@ -261,7 +264,7 @@ def prediction_data_by_town(resume=False, recovery=False):
             logger.info(f"🌐 [{i}/{total_towns}] Procesando el municipio {name}")
 
             # Obtener datos del municipio
-            town_data = fetch_prediction_station_data(code, last_request_time=now)
+            town_data, now = fetch_prediction_station_data(code, last_request_time=now)
 
             if not town_data:
                 logger.warning(f"❗ No se obtuvieron datos para el municipio {code}")
@@ -302,17 +305,17 @@ def prediction_data_from_error_journal():
         error_journal_path = os.path.join(api_dir, 'error_journal', 'error_prediction.json')
         now = datetime.now(timezone.utc).isoformat()
         
-        # Verificar que existe error_prediction.json
+        # 2. Verificar que existe error_prediction.json
         if not os.path.exists(error_journal_path):
             logger.warning(f"❗No existe el archivo error_prediction.json")
             return None
         
         
-        # 2. Usar verify_json_docs para cargar los archivos JSON
+        # 3. Usar verify_json_docs para cargar los archivos JSON
         prediction_data = verify_json_docs(prediction_data_path, [])
         error_entries = verify_json_docs(error_journal_path, [])
         
-        # Convertir a diccionario para acceso eficiente
+        # 4. Crea un diccionario para desde prediction_data
         prediction_dict = {str(town.get('id')): town for town in prediction_data if 'id' in town}
         
         if not error_entries:
@@ -321,7 +324,7 @@ def prediction_data_from_error_journal():
         
         logger.info(f"Procesando {len(error_entries)} entradas del journal de errores")
         
-        # 3. Procesar cada entrada del journal de errores
+        # 5. Procesar cada entrada del journal de errores
         processed_count = 0
         
         for entry in error_entries:
@@ -331,20 +334,19 @@ def prediction_data_from_error_journal():
                 continue
             
             # Obtener nuevos datos para este municipio
-            town_data = fetch_prediction_station_data(town_code, last_request_time=now)
+            town_data, now = fetch_prediction_station_data(town_code, last_request_time=now)
             
             if town_data:
                 town_id = str(town_data.get('id', town_code))
-                # Conservar timestamp de inserción si existe
-                town_data['ts_insert'] = prediction_dict.get(town_id, {}).get('ts_insert', now)
+                town_data['ts_insert'] = prediction_dict.get(town_id, {}).get('ts_insert', now) # si existe lo conserva
                 town_data['ts_update'] = now
                 
                 # Actualizar el diccionario
                 prediction_dict[town_id] = town_data
                 processed_count += 1
-                logger.info(f"Datos actualizados para el municipio {town_id}")
+                logger.info(f"✅ Datos actualizados para el municipio {town_id}")
                 
-                # Guardar progreso incremental
+                # Guardar progreso por cada municipio
                 with open(prediction_data_path, 'w', encoding='utf-8') as f:
                     json.dump(list(prediction_dict.values()), f, ensure_ascii=False, indent=4)
             else:
@@ -353,12 +355,12 @@ def prediction_data_from_error_journal():
             # Pausar entre peticiones
             time.sleep(REQUEST_DELAY)
         
-        # 4. Limpiar el journal de errores si se procesaron correctamente
+        # 6. Limpiar el journal de errores si se procesaron correctamente
         if processed_count > 0:
             os.remove(error_journal_path)
-            logger.info(f"Journal de errores limpiado correctamente")
+            logger.info(f"✅ Journal de errores eliminado correctamente")
         
-        logger.info(f"Proceso completado. Municipios actualizados: {processed_count}")
+        logger.info(f"✅ Proceso completado. Municipios actualizados: {processed_count}")
         return list(prediction_dict.values())
         
     except KeyError as e:

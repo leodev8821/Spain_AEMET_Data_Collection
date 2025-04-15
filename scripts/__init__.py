@@ -2,6 +2,7 @@ from .scriptv3 import historical_data, data_from_error_journal, prediction_data_
 from .utils import obtain_and_group_stations_codes, date_validation, check_missing_town_codes, check_missing_group_codes
 from .csv_convert import historical_data_to_csv, predictions_to_csv
 from .verify_files import verify_json_docs
+from .tenacity_config import RateLimitException, api_retry
 
 __all__ = [
     'historical_data',
@@ -15,5 +16,7 @@ __all__ = [
     'historical_data_to_csv',
     'predictions_to_csv',
     'verify_json_docs',
-    'prediction_data_from_error_journal'
+    'prediction_data_from_error_journal',
+    'RateLimitException',
+    'api_retry'
     ]

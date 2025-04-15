@@ -154,6 +154,7 @@ def build_url(
         return(weather_values_url)
     
 def format_historical_weather_data(station_data):
+    '''Función para dar formato al JSON de los valores históricos'''
     return {
         "avg_t": station_data.get('tmed', 'no_data'),
         "max_t": station_data.get('tmax', 'no_data'),
@@ -168,6 +169,7 @@ def format_historical_weather_data(station_data):
     }
 
 def format_prediction_weather_data(day_data):
+    '''Función para dar formato al JSON de los valores de previsión'''
     return {
         "probPrecipitacion": day_data.get('probPrecipitacion', []),
         "cotaNieveProv": day_data.get('cotaNieveProv', []),
@@ -182,7 +184,7 @@ def format_prediction_weather_data(day_data):
 
 def check_missing_town_codes():
     """
-    Compara los codigos de los pueblos entre towns_codes.json y prediction_data.json y genera una lista de los codigos de pueblos pendientes
+    Función que compara los codigos de los pueblos entre towns_codes.json y prediction_data.json y genera una lista de los codigos de pueblos pendientes
     """
     try:
         # configuramos la ubicacion del archivo
@@ -226,7 +228,7 @@ def check_missing_town_codes():
     
 def check_missing_group_codes():
     """
-    Compara los códigos de los grupos entre codes_group.json y weather_data.json
+    Función que compara los códigos de los grupos entre codes_group.json y weather_data.json
     y genera una lista de los grupos pendientes en pending_group_codes.json
     """
     try:
