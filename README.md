@@ -1,20 +1,21 @@
-# Datos Históricos y Previsión meteorológicos de la AEMET - España
+# Historic and Forecast Weather Data from AEMET - Spain
 ---
-Aplicación que obtiene los datos meteorológicos históricos de todas las estaciones de España desde el 01-01-2025 hasta la fecha deseada. Con estos datos se construyen archivos ```'.csv'``` cpara ser usado en plataformas como Google Cloud Platform.
-También obtiene y genera los archivos ```'.csv'``` de la Previsión Meteorológica para todos los municipios de España (8132).
+A command-line tool built with Python that retrieves historical weather data from all weather stations in Spain from 01-01-2025 to the desired date. With this data, it generates ```'.csv'``` files to be used on platforms like Google Cloud Platform.
+It also retrieves and generates ```'.csv'``` files containing Weather Forecast data for all Spanish municipalities (8132 in total).
 
-Para extraer dicha información se emplea la [API de la AEMET](https://opendata.aemet.es/centrodedescargas/inicio)
+The data is extracted using the [AEMET API](https://opendata.aemet.es/centrodedescargas/inicio).
 
-## Requisitos
+
+## Requirements
 ---
-1. Obtener la [API KEY de la AEMET](https://opendata.aemet.es/centrodedescargas/altaUsuario) para poder usar la aplicación y almacenarla en el archivo ```.env``` con el nombre **AEMET_API_KEY**
+1. Obtain an [AEMET API KEY](https://opendata.aemet.es/centrodedescargas/altaUsuario) to use the application and store it in a ```.env``` file with the name **AEMET_API_KEY=your_api_key_here**.
 
-2. Crear el entorno virutal **.venv**
+2. Create the virtual environment **.venv**
     ```python
     python -m venv .venv
     ```
 
-3. Activar el entorno virtual recién creado
+3. Activate the newly created virtual environment:
 	- Windows
 	```
 	.venv\Scripts\activate
@@ -24,108 +25,118 @@ Para extraer dicha información se emplea la [API de la AEMET](https://opendata.
 	source .venv/bin/activate
 	```
 
-4. Instalar los paquetes necesarios incluidos en el **requirements.txt**:
+4. Install the required packages listed in **requirements.txt**:
     ```python
     pip3 install -r requirements.txt
     ```
 
-## Ejecución
+## Execution
 ---
-Ejecutar la aplicación mediante el comando
+Run the application using the command:
 
 ```python 
 python -m main
 ```
 
-## Menú de la aplicación
----
-Seleccionar las opciones del menú en la consola que son:
 
-#### **1️⃣ Obtener códigos de las estaciones**
+# Console Menu Options
 
-- Hace un fetch a la API para obtener todos los códigos de las estaciones de la AEMET y crear los archivos ***json/ema_codes.json*** y ***json/codes_group.json***.
+## Main Menu
 
-#### **2️⃣ Obtener los datos históricoss**
-* Esta opción abre otro prompt para ingresar otras opciones:
+Select options from the menu displayed in the console:
 
-    ##### 1️⃣ **Generar archivo desde cero**.
-    - Crea el archivo en ***~/json/weather_data.json***.
+### 1️⃣ Get weather station codes
+Fetches all AEMET station codes via the API and generates:
+- `json/ema_codes.json`
+- `json/codes_group.json`
 
-    ##### 2️⃣ **Reanudar la obtención de la información**
-    - Crea el archivo en ***~/json/pending_group_codes.json*** y a partir de éste, actualiza la informacion de ***~/json/weather_data.json*** (debe introducir la misma fecha final que se usó para generar el archivo desde cero).
+### 2️⃣ Get historical weather data
+This option opens a sub-menu:
 
-    ##### 3️⃣ **Recuperar información histórica desde los errores**
-    - A partir del archivo ***~/error_journal/errors.json*** (un log que guarda las estaciones que fallaron anteriormente) se actualiza la información en ***~/json/weather_data.json***.
+#### 1️⃣ Generate file from scratch
+Creates the file at `~/json/weather_data.json`
 
-    ##### 0️⃣ **Volver**
-    - Retorna al menú anterior.
+#### 2️⃣ Resume data collection
+Creates:
+- `~/json/pending_group_codes.json`
+Resumes updating `~/json/weather_data.json`  
+*(You must enter the same end date used when the file was first created)*
 
-#### **3️⃣ Crear archivos 'csv' históricos**
-  * Esta opción abre otro prompt para ingresar otras opciones:
+#### 3️⃣ Recover data from error log
+Uses:
+- `~/error_journal/errors.json` (log of previously failed stations)
+To update:
+- `~/json/weather_data.json`
 
-    ##### 1️⃣ **Crear temperatura_historico.csv**.
-    - Crea el archivo en ***~/csv/historical/temperatura_historico.csv***.
+#### 0️⃣ Back
+Returns to the previous menu
 
-    ##### 2️⃣ **Crear humedad_relativa_historico.csv**
-    - Crea el archivo en ***~/csv/historical/humedad_relativa_historico.csv***.
+### 3️⃣ Generate historical 'csv' files
+This option opens a sub-menu:
 
-    ##### 3️⃣ **Crear precipitaciones_historico.csv**
-    - Crea el archivo en ***~/csv/historical/precipitaciones_historico.csv***.
+#### 1️⃣ Create temperatura_historico.csv
+Location: `~/csv/historical/temperatura_historico.csv`
 
-    ##### 4️⃣ **Crear viento_historico.csv**
-    - Crea el archivo en ***~/csv/historical/viento_historico.csv***.
+#### 2️⃣ Create humedad_relativa_historico.csv
+Location: `~/csv/historical/humedad_relativa_historico.csv`
 
-    ##### 0️⃣ **Volver**
-    - Retorna al menú anterior.
+#### 3️⃣ Create precipitaciones_historico.csv
+Location: `~/csv/historical/precipitaciones_historico.csv`
 
-#### **4️⃣ Previsión próximos 7 dias (todos los municipios)**
+#### 4️⃣ Create viento_historico.csv
+Location: `~/csv/historical/viento_historico.csv`
 
-  * Esta opción abre otro prompt para ingresar otras opciones:
+#### 0️⃣ Back
+Returns to the previous menu
 
-    ##### 1️⃣ **Obtener previsión de los próximos 7 dias**.
-    - Obtiene y guarda en el archivo en ***~/json/prediction_data.json*** la la previsión meteorológica de los próximos 7 dias a la fecha de la consulta (cuando se ejecuta el script).
+### 4️⃣ 7-day forecast (all municipalities)
+This option opens a sub-menu:
 
-    ##### 2️⃣ **Reanudar obtención de previsión de los próximos 7 dias**
-    - Crea el archivo  ***~/json/pending_towns_codes.json*** y a partir de éste, reanuda la obtención de la previsión meteorológica.
+#### 1️⃣ Fetch 7-day forecast
+Retrieves and stores at `~/json/prediction_data.json`  
+*(Based on execution date)*
 
-    ##### 0️⃣ **Volver**
-    - Retorna al menú anterior.
+#### 2️⃣ Resume 7-day forecast retrieval
+Creates `~/json/pending_towns_codes.json`  
+Resumes forecast collection from this file
 
-#### **5️⃣ Crear archivos 'csv' de predicción**
+#### 0️⃣ Back
+Returns to the previous menu
 
-  * Esta opción abre otro prompt para ingresar otras opciones:
+### 5️⃣ Generate forecast 'csv' files
+This option opens a sub-menu:
 
-    ##### 1️⃣ **Crear prediccion_precipitaciones.csv**.
-    - Crea el archivo en ***~/csv/prediction/prediccion_precipitaciones.csv***.
+#### 1️⃣ Create prediccion_precipitaciones.csv
+Location: `~/csv/prediction/prediccion_precipitaciones.csv`
 
-    ##### 2️⃣ **Crear prediccion_cota_nieve.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_cota_nieve.csv***.
+#### 2️⃣ Create prediccion_cota_nieve.csv
+Location: `~/csv/prediction/prediccion_cota_nieve.csv`
 
-    ##### 3️⃣ **Crear prediccion_estado_cielo.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_estado_cielo.csv***.
+#### 3️⃣ Create prediccion_estado_cielo.csv
+Location: `~/csv/prediction/prediccion_estado_cielo.csv`
 
-    ##### 4️⃣ **Crear prediccion_viento.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_viento.csv***.
- 
-    ##### 5️⃣ **Crear prediccion_racha_max.csv**.
-    - Crea el archivo en ***~/csv/prediction/prediccion_racha_max.csv***.
+#### 4️⃣ Create prediccion_viento.csv
+Location: `~/csv/prediction/prediccion_viento.csv`
 
-    ##### 6️⃣ **Crear prediccion_temperatura.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_temperatura.csv***.
+#### 5️⃣ Create prediccion_racha_max.csv
+Location: `~/csv/prediction/prediccion_racha_max.csv`
 
-    ##### 7️⃣ **Crear prediccion_sens_termica.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_sens_termica.csv***.
+#### 6️⃣ Create prediccion_temperatura.csv
+Location: `~/csv/prediction/prediccion_temperatura.csv`
 
-    ##### 8️⃣ **Crear prediccion_humedad_relativa.csv**
-    - Crea el archivo en ***~/csv/prediction/prediccion_humedad_relativa.csv***.
+#### 7️⃣ Create prediccion_sens_termica.csv
+Location: `~/csv/prediction/prediccion_sens_termica.csv`
 
-    ##### 0️⃣ **Volver**
-    - Retorna al menú anterior.
+#### 8️⃣ Create prediccion_humedad_relativa.csv
+Location: `~/csv/prediction/prediccion_humedad_relativa.csv`
 
-    ##### 0️⃣ **Terminar la ejecución**
-    - Finaliza la ejecución de la aplicación.
+#### 0️⃣ Back
+Returns to the previous menu
 
-# Estructura de la aplicación
+### 0️⃣ Exit
+Ends the application
+
+# Application Structure
 ---
 ```txt
 \aemet_api
